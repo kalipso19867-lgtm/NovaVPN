@@ -1,22 +1,30 @@
-name: Android Debug APK
+name: NovaVPN sing-box Android APK
 on: [workflow_dispatch, push]
+permissions:
+  contents: read
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout NovaVPN build recipe
+        uses: actions/checkout@v4
+      - name: Checkout sing-box Android client
+        run: |
+          git clone --depth 1 https://github.com/TypeNil/vpnclient-android.git client
+          sed -i 's#<string name="brand_name" translatable="false">Yuyake</string>#<string name="brand_name" translatable="false">NovaVPN</string>#' client/app/src/main/res/values/strings.xml
+          sed -i 's#<string name="brand_wordmark" translatable="false">YUYAKE</string>#<string name="brand_wordmark" translatable="false">NOVAVPN</string>#' client/app/src/main/res/values/strings.xml
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.9'
-      - name: Accept Android SDK licenses
-        run: yes | sdkmanager --licenses || true
-      - name: Build debug APK
-        run: gradle assembleDebug
+      - name: Build sing-box Android APK
+        working-directory: client
+        run: |
+          chmod +x ./gradlew
+          ./gradlew --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: NovaVPN-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          name: NovaVPN-singbox-debug-apk
+          path: client/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 30
