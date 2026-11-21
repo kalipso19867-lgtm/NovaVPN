@@ -16,7 +16,8 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '25'
+      - uses: gradle/actions/setup-gradle@v4
       - name: Build sing-box Android APK
         working-directory: client
         run: |
