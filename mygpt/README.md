@@ -1,19 +1,30 @@
-# MyGPT 160 — Android-first AI chat
+# MyGPT 160 — AI-чат для Android
 
-A lightweight installable PWA with 160 specialist personas. All personas share one selected model endpoint; they are not 160 independent model instances.
+Лёгкое устанавливаемое веб-приложение (PWA) с 160 профилями специалистов. Это 160 настроенных ролей/инструкций, работающих через одну выбранную языковую модель, а не 160 независимых ИИ-моделей или автономных агентов.
 
-## Run
-Open `index.html` from a static host (GitHub Pages recommended). On Android Chrome use menu → Install app / Add to Home screen.
+## Быстрый запуск на Android
 
-## Connect the free model
-Open Settings → get a free API key from https://aistudio.google.com/app/apikey → paste it into the app. Default model: `gemini-2.5-flash`. Free quotas, availability and model names are controlled by Google and can change. No API key is bundled in this repository. The key is saved in browser local storage on the device.
+1. Открой опубликованную страницу приложения в Chrome.
+2. Открой меню Chrome (⋮).
+3. Выбери «Установить приложение» или «Добавить на главный экран».
+4. Открой MyGPT 160 с главного экрана.
+5. Открой настройки приложения и добавь собственный API-ключ Gemini.
 
-## Privacy and limitations
-- Messages are sent to Google Gemini when you use the app.
-- This static demo stores conversation state only in memory; refresh clears chat.
-- Never commit an API key to GitHub.
-- It is not ChatGPT/GPT-6 and cannot reproduce proprietary OpenAI models.
-- No unlimited free inference is promised.
+## Подключение модели
 
-## Publish
-Enable GitHub Pages for the `mygpt` folder (or use the included Pages workflow). The app can then be installed as a PWA on Android.
+Получить ключ можно в Google AI Studio: https://aistudio.google.com/app/apikey
+
+По умолчанию указана модель `gemini-2.5-flash`. Введи свой ключ в настройках приложения. Ключ хранится локально в браузере на устройстве и не должен добавляться в GitHub. Доступность моделей, бесплатные квоты и ограничения определяет Google; они могут меняться.
+
+## Публикация
+
+Репозиторий содержит workflow `.github/workflows/pages-mygpt.yml`, который публикует содержимое папки `mygpt/` в GitHub Pages. Для первого запуска в настройках репозитория GitHub в разделе **Settings → Pages → Build and deployment** должен быть выбран источник **GitHub Actions**. После успешного workflow адрес страницы появится в разделе Pages и в результате деплоя.
+
+## Конфиденциальность и ограничения
+
+- При отправке сообщения его текст передаётся Google Gemini через API.
+- История диалога в текущей версии хранится только в памяти вкладки; после перезагрузки страницы она очищается.
+- Не публикуй API-ключ в репозитории и не передавай его посторонним.
+- Это самостоятельное приложение на Gemini API, не ChatGPT/GPT-6 и не копия закрытых моделей OpenAI.
+- Бесплатное использование ограничено квотами провайдера; безлимитный бесплатный ИИ не обещается.
+- Это PWA, а не APK. Для публикации в Google Play потребуется отдельная Android-обёртка, подпись приложения и выполнение требований Google Play.
