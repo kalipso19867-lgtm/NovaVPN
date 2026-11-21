@@ -6,8 +6,10 @@ export default {
       "http://localhost",
       "https://localhost"
     ]);
+    // Permit the hosted app when it is served from a Cloudflare Workers subdomain.
+    const isAllowedOrigin = allowed.has(origin) || /^https:\/\/[a-z0-9-]+\.workers\.dev$/i.test(origin);
     const headers = {
-      "Access-Control-Allow-Origin": allowed.has(origin) ? origin : "null",
+      "Access-Control-Allow-Origin": isAllowedOrigin ? origin : "null",
       "Access-Control-Allow-Methods": "POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
       "Vary": "Origin"
