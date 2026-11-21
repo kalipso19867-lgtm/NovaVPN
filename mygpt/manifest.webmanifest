@@ -1,0 +1,10 @@
+{
+  "name": "MyGPT 160",
+  "short_name": "MyGPT",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#10131b",
+  "theme_color": "#10131b",
+  "description": "AI assistant with 160 specialist roles",
+  "icons": []
+}
