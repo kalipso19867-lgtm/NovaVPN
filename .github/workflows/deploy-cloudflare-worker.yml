@@ -1,0 +1,40 @@
+name: Deploy MyGPT Cloudflare Worker
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'cloudflare-worker/**'
+      - '.github/workflows/deploy-cloudflare-worker.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Wrangler
+        run: npm install --global wrangler
+
+      - name: Configure Worker secrets and deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "Missing GitHub Actions secrets: CLOUDFLARE_API_TOKEN and/or CLOUDFLARE_ACCOUNT_ID"
+            exit 1
+          fi
+          printf '%s' "$CLOUDFLARE_ACCOUNT_ID" | wrangler secret put CF_ACCOUNT_ID --name mygpt160-ai
+          printf '%s' "$CLOUDFLARE_API_TOKEN" | wrangler secret put CF_API_TOKEN --name mygpt160-ai
+          wrangler deploy cloudflare-worker/worker.js --name mygpt160-ai
