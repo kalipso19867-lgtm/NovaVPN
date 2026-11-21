@@ -1,0 +1,30 @@
+name: Deploy NovaVPN server
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copy installer to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPN_HOST }}
+          username: ${{ secrets.VPN_USER }}
+          key: ${{ secrets.VPN_SSH_KEY }}
+          port: ${{ secrets.VPN_SSH_PORT || 22 }}
+          source: "server/deploy.sh"
+          target: "/tmp/novavpn-deploy"
+          strip_components: 1
+      - name: Install and configure sing-box
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPN_HOST }}
+          username: ${{ secrets.VPN_USER }}
+          key: ${{ secrets.VPN_SSH_KEY }}
+          port: ${{ secrets.VPN_SSH_PORT || 22 }}
+          script: |
+            chmod +x /tmp/novavpn-deploy/deploy.sh
+            sudo bash /tmp/novavpn-deploy/deploy.sh
