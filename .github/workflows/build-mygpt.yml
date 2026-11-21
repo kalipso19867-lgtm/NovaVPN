@@ -1,0 +1,21 @@
+name: Package MyGPT 160
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'mygpt/**'
+      - '.github/workflows/build-mygpt.yml'
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package project
+        run: cd mygpt && zip -r ../MyGPT-160.zip .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MyGPT-160-project
+          path: MyGPT-160.zip
+          retention-days: 30
