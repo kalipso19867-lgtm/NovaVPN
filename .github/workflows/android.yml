@@ -14,6 +14,21 @@ jobs:
           git clone --depth 1 https://github.com/TypeNil/vpnclient-android.git client
           sed -i 's#<string name="brand_name" translatable="false">Yuyake</string>#<string name="brand_name" translatable="false">NovaVPN</string>#' client/app/src/main/res/values/strings.xml
           sed -i 's#<string name="brand_wordmark" translatable="false">YUYAKE</string>#<string name="brand_wordmark" translatable="false">NOVAVPN</string>#' client/app/src/main/res/values/strings.xml
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("client/app/build.gradle.kts")
+          s = p.read_text()
+          s = s.replace("android {", '''android {
+              splits {
+                  abi {
+                      isEnable = true
+                      reset()
+                      include("arm64-v8a")
+                      isUniversalApk = false
+                  }
+              }''', 1)
+          p.write_text(s)
+          PY
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -24,10 +39,10 @@ jobs:
       - name: Build sing-box Android APK
         working-directory: client
         run: |
-          gradle --no-daemon assembleDebug
+          gradle --no-daemon assembleArm64Debug
       - uses: actions/upload-artifact@v4
         with:
           name: NovaVPN-singbox-debug-apk
-          path: client/app/build/outputs/apk/debug/*.apk
+          path: client/app/build/outputs/apk/arm64/debug/*.apk
           if-no-files-found: error
           retention-days: 30
