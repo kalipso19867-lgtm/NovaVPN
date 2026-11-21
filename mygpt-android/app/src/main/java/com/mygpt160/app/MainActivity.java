@@ -25,6 +25,9 @@ public class MainActivity extends Activity {
             .build();
         webView = new WebView(this);
         webView.getSettings().setJavaScriptEnabled(true);
+        webView.getSettings().setCacheMode(android.webkit.WebSettings.LOAD_NO_CACHE);
+        webView.setFocusable(true);
+        webView.setFocusableInTouchMode(true);
         webView.getSettings().setDomStorageEnabled(true);
         webView.getSettings().setDatabaseEnabled(true);
         webView.getSettings().setAllowFileAccess(true);
@@ -53,7 +56,8 @@ public class MainActivity extends Activity {
             }
         });
         setContentView(webView);
-        webView.loadUrl("https://appassets.androidplatform.net/assets/www/index.html");
+        webView.clearCache(true);
+        webView.loadUrl("https://appassets.androidplatform.net/assets/www/index.html?build=358de820be1e");
     }
 
     @Override
