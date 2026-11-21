@@ -5,6 +5,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout NovaVPN build recipe
         uses: actions/checkout@v4
@@ -18,11 +19,12 @@ jobs:
           distribution: temurin
           java-version: '25'
       - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
       - name: Build sing-box Android APK
         working-directory: client
         run: |
-          chmod +x ./gradlew
-          ./gradlew --no-daemon assembleDebug
+          gradle --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
         with:
           name: NovaVPN-singbox-debug-apk
