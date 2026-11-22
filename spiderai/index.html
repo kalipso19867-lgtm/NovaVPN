@@ -28,6 +28,29 @@ header h1{font-size:19px;margin:0;flex:1}button,select{color:#fff;background:#ff
 #fileInput{position:fixed;left:-10000px;width:1px;height:1px;opacity:0}
 .hint{text-align:center;opacity:.75;padding:25px 12px;line-height:1.7}.small{font-size:11px;opacity:.65}
 a{color:#8de8ff}
+ 
+/* Mobile-first touch layout */
+:root{--safe-bottom:env(safe-area-inset-bottom,0px)}
+body{height:100dvh;min-height:100svh;padding-bottom:var(--safe-bottom)}
+header{min-height:58px;padding:8px clamp(8px,2vw,16px);gap:6px;flex-wrap:nowrap}
+header h1{font-size:clamp(16px,4vw,20px);white-space:nowrap}
+header button,header select,.composer button,.mode{min-height:44px}
+header select{max-width:36vw;min-width:0;font-size:12px;padding:7px 6px}
+#chat{padding:clamp(8px,2.5vw,16px);overscroll-behavior:contain}
+.msg{max-width:min(94%,760px);font-size:15px}
+.modes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;padding:6px 8px}
+.mode{font-size:clamp(11px,2.8vw,13px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.composer{gap:6px;padding:8px;padding-bottom:calc(8px + var(--safe-bottom))}
+.composer button{width:44px;min-width:44px;padding:0;font-size:17px;display:grid;place-items:center}
+#prompt{height:46px;min-height:46px;padding:10px 14px;font-size:16px}
+#send{border:0}
+#chiprow{display:flex;gap:5px;overflow-x:auto;padding:4px 8px;white-space:nowrap}
+.chip{flex:none}
+button,select,input{touch-action:manipulation}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #75c7ff;outline-offset:2px}
+@media(max-width:380px){header{gap:4px}header h1{font-size:15px}header button{padding:6px;width:38px}header select{max-width:31vw}.composer{gap:4px;padding-left:6px;padding-right:6px}.composer button{width:40px;min-width:40px}.modes{gap:4px;padding-left:5px;padding-right:5px}}
+@media(min-width:700px){body{max-width:980px;margin:0 auto;border-left:1px solid #ffffff18;border-right:1px solid #ffffff18}.msg{font-size:16px}.composer{padding:12px}.modes{padding:9px 12px}}
+
 </style>
 </head>
 <body>
@@ -40,8 +63,8 @@ a{color:#8de8ff}
 <script>
 const $=id=>document.getElementById(id), chat=$('chat'), input=$('prompt'), fileInput=$('fileInput');
 const SYSTEM='Ты — Spider AI, универсальный ИИ-помощник. Отвечай на русском, понятно, структурированно и по делу.';
-const FALLBACK_MODELS=['openai-fast','openai','openai-large','mistral','mistral-large','deepseek','qwen','llama','phi','searchgpt'];
-let mode='chat', attachments=[], history=[], modelList=FALLBACK_MODELS.slice();
+const FALLBACK_MODELS=['openai/gpt-oss-20b','mistralai/mistral-small-3.2','qwen/qwen3-coder-30b-a3b-instruct','meta/llama-3.3-70b-instruct'];
+let mode='chat', attachments=[], history=[], modelList=FALLBACK_MODELS.slice(), imageModels=[], videoModels=[], pollenKey=localStorage.getItem('sp_pollen_key')||'';
 try{history=JSON.parse(localStorage.getItem('sp_h')||'[]')}catch(e){}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function save(){try{localStorage.setItem('sp_h',JSON.stringify(history.slice(-80)))}catch(e){}}
@@ -65,38 +88,38 @@ function speak(t){if(!('speechSynthesis'in window))return; speechSynthesis.cance
 function download(url,name){const a=document.createElement('a');a.href=url;a.download=name;a.click()}
 function progress(label){const d=document.createElement('div');d.className='msg ai';d.innerHTML='<div class="progress"><div class="progress-label"><span></span><b>0%</b></div><div class="track"><div class="fill"></div></div></div>';chat.append(d);chat.scrollTop=chat.scrollHeight;const l=d.querySelector('span'),p=d.querySelector('b'),f=d.querySelector('.fill');return{el:d,set(n,s){n=Math.max(0,Math.min(99,Math.round(n)));f.style.width=n+'%';p.textContent=n+'%';l.textContent=s||label;chat.scrollTop=chat.scrollHeight},done(){d.remove()}}}
 function timerProgress(pb){let n=2;const id=setInterval(()=>{n=Math.min(90,n+1+Math.random()*3);pb.set(n,'🕷️ Получаю ответ…')},650);return()=>clearInterval(id)}
-async function loadModels(){modelList=FALLBACK_MODELS.slice();const sel=$('modelSel');sel.innerHTML='';modelList.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.append(o)});const saved=localStorage.getItem('sp_model');if(saved&&modelList.includes(saved))sel.value=saved}
+async function catalog(path){try{const r=await fetch('https://gen.pollinations.ai'+path);if(!r.ok)throw Error('HTTP '+r.status);const j=await r.json();return Array.isArray(j)?j:(j.data||j.models||[])}catch(e){console.warn('catalog',path,e);return[]}}
+function modelId(x){return x.id||x.name||x.model||''}
+async function loadModels(){
+ const [texts,imgs,vids]=await Promise.all([catalog('/text/models'),catalog('/image/models'),catalog('/video/models')]);
+ const usable=texts.filter(x=>modelId(x)).map(modelId);
+ if(usable.length)modelList=usable;
+ imageModels=imgs.filter(x=>modelId(x)).map(modelId);
+ videoModels=vids.filter(x=>modelId(x)).map(modelId);
+ const sel=$('modelSel');sel.innerHTML='';
+ modelList.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.append(o)});
+ const saved=localStorage.getItem('sp_model');if(saved&&modelList.includes(saved))sel.value=saved;
+}
 $('modelSel').onchange=()=>localStorage.setItem('sp_model',$('modelSel').value);
-$('settings').onclick=()=>alert('Spider AI использует модели Pollinations без ввода API-ключа. Доступность и бесплатные лимиты зависят от сервиса.');
+$('settings').onclick=()=>{
+ const k=prompt('Вставь свой ключ Pollinations (sk_...). Получить можно на enter.pollinations.ai. Ключ хранится только в локальном хранилище этого устройства. Не отправляй его в чат.',pollenKey);
+ if(k===null)return;
+ pollenKey=k.trim();
+ if(pollenKey)localStorage.setItem('sp_pollen_key',pollenKey);else localStorage.removeItem('sp_pollen_key');
+ alert(pollenKey?'Ключ сохранён на этом устройстве. Проверь баланс и разрешённые модели в кабинете Pollinations.':'Ключ удалён.');
+};
+function authHeaders(json=false){const h={};if(json)h['Content-Type']='application/json';if(pollenKey)h.Authorization='Bearer '+pollenKey;return h}
 async function ask(text,images=[]){
- const chosen=$('modelSel').value||FALLBACK_MODELS[0];
- const chain=[chosen,...FALLBACK_MODELS.filter(x=>x!==chosen)];
- let last='нет ответа';
- for(const m of chain){
-  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),50000);
-  try{
-   let response;
-   if(images.length){
-    const content=[{type:'text',text}];
-    images.forEach(url=>content.push({type:'image_url',image_url:{url}}));
-    response=await fetch('https://text.pollinations.ai/?model='+encodeURIComponent(m),{
-     method:'POST',headers:{'Content-Type':'application/json'},
-     body:JSON.stringify({model:m,messages:[{role:'system',content:SYSTEM},{role:'user',content}]}),
-     signal:controller.signal
-    });
-   }else{
-    const params=new URLSearchParams({model:m,seed:String(Math.floor(Math.random()*1e6))});
-    response=await fetch('https://text.pollinations.ai/'+encodeURIComponent(text)+'?'+params.toString(),{signal:controller.signal});
-   }
-   if(response.ok){
-    const answer=await response.text();
-    if(answer.trim()&&!answer.trim().startsWith('<'))return answer;
-    last=m+' вернул пустой ответ';
-   }else last=m+' HTTP '+response.status;
-  }catch(e){last=m+' '+(e.name==='AbortError'?'тайм-аут':e.message)}
-  finally{clearTimeout(timeout)}
- }
- throw Error('Доступные модели сейчас не ответили ('+last+'). Попробуй ещё раз позже.');
+ if(!pollenKey)throw Error('Для запросов к актуальному API нужен личный ключ Pollinations. Нажми ⚙ и добавь sk_-ключ. Сам каталог моделей доступен без ключа.');
+ const model=$('modelSel').value||modelList[0];
+ const content=[{type:'text',text}];
+ images.forEach(url=>content.push({type:'image_url',image_url:{url}}));
+ const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),90000);
+ try{
+  const r=await fetch('https://gen.pollinations.ai/v1/chat/completions',{method:'POST',headers:authHeaders(true),signal:controller.signal,body:JSON.stringify({model,messages:[{role:'system',content:SYSTEM},{role:'user',content:images.length?content:text}],temperature:.7})});
+  if(!r.ok)throw Error('Pollinations HTTP '+r.status+' — проверь ключ, баланс и доступ модели');
+  const j=await r.json();return j.choices?.[0]?.message?.content||'Модель вернула пустой ответ';
+ }finally{clearTimeout(timeout)}
 }
 function renderChips(){const w=$('chiprow');w.innerHTML='';attachments.forEach((a,i)=>{const c=document.createElement('span');c.className='chip';c.textContent=(a.type==='image'?'📷 ':a.type==='video'?'🎬 ':'📄 ')+a.name+' ';const b=document.createElement('button');b.textContent='✖';b.onclick=()=>{attachments.splice(i,1);renderChips()};c.append(b);w.append(c)})}
 function readFile(f){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(f)})}
@@ -104,15 +127,28 @@ async function compressImage(file){const data=await readFile(file);return new Pr
 async function extractFrames(file,count=4){const u=URL.createObjectURL(file),v=document.createElement('video');v.preload='auto';v.muted=true;v.playsInline=true;return new Promise(resolve=>{v.onerror=()=>{URL.revokeObjectURL(u);resolve([])};v.onloadedmetadata=async()=>{const w=Math.min(640,v.videoWidth||640),h=Math.max(1,Math.round((v.videoHeight||360)*w/(v.videoWidth||640))),c=document.createElement('canvas'),ctx=c.getContext('2d');c.width=w;c.height=h;const out=[];for(let i=0;i<count;i++){const t=Math.min(v.duration*(i+.5)/count,Math.max(0,v.duration-.06));await new Promise(ok=>{let settled=false;const finish=()=>{if(settled)return;settled=true;try{ctx.drawImage(v,0,0,w,h);out.push(c.toDataURL('image/jpeg',.76))}catch(e){}ok()};v.addEventListener('seeked',finish,{once:true});v.currentTime=t;setTimeout(finish,4500)})}URL.revokeObjectURL(u);resolve(out)};v.src=u;v.load()})}
 fileInput.onchange=async()=>{for(const f of [...fileInput.files]){if(f.type.startsWith('image/')){if(f.size>12*1024*1024){alert('Фото должно быть до 12 МБ');continue}const data=await compressImage(f);if(data)attachments.push({type:'image',data,name:f.name})}else if(f.type.startsWith('video/')){const frames=await extractFrames(f,4);if(frames.length)attachments.push({type:'video',frames,name:f.name})}else{try{attachments.push({type:'text',content:(await f.text()).slice(0,20000),name:f.name})}catch(e){}}}fileInput.value='';renderChips()};
 $('attach').onclick=()=>fileInput.click();document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('active',x===b));input.placeholder=mode==='img'?'Опиши изображение…':mode==='clip'?'Опиши короткий видеоклип…':'Напиши сообщение…';if(mode==='file')fileInput.click()});
-function imageURL(prompt,w=1024,h=1024){return 'https://image.pollinations.ai/prompt/'+encodeURIComponent(prompt)+'?model=flux&width='+w+'&height='+h+'&nologo=true&enhance=true&seed='+Math.floor(Math.random()*1e6)}
-async function fetchImage(url,pb,base,span,label){const r=await fetch(url);if(!r.ok)throw Error('HTTP '+r.status);const total=+r.headers.get('content-length')||0,reader=r.body.getReader(),chunks=[];let got=0;while(true){const x=await reader.read();if(x.done)break;chunks.push(x.value);got+=x.value.length;pb.set(total?base+span*got/total:Math.min(base+span-2,base+span*got/60000),label)}const all=new Uint8Array(got);let off=0;chunks.forEach(c=>{all.set(c,off);off+=c.length});return URL.createObjectURL(new Blob([all],{type:r.headers.get('content-type')||'image/jpeg'}))}
+function imageURL(prompt,w=1024,h=1024){return 'https://gen.pollinations.ai/image/'+encodeURIComponent(prompt)+'?model=' + encodeURIComponent(imageModels[0]||'black-forest-labs/flux.1-schnell')+'&width='+w+'&height='+h+'&seed='+Math.floor(Math.random()*1e6)}
+async function fetchImage(url,pb,base,span,label){if(!pollenKey)throw Error('Для генерации нужен личный Pollinations sk_-ключ: ⚙ Настройки');const r=await fetch(url,{headers:authHeaders()});if(!r.ok)throw Error('HTTP '+r.status);const total=+r.headers.get('content-length')||0,reader=r.body.getReader(),chunks=[];let got=0;while(true){const x=await reader.read();if(x.done)break;chunks.push(x.value);got+=x.value.length;pb.set(total?base+span*got/total:Math.min(base+span-2,base+span*got/60000),label)}const all=new Uint8Array(got);let off=0;chunks.forEach(c=>{all.set(c,off);off+=c.length});return URL.createObjectURL(new Blob([all],{type:r.headers.get('content-type')||'image/jpeg'}))}
 async function generateImage(prompt){if(!prompt)return;addMessage('user','🖼️ '+prompt);const pb=progress('Генерирую изображение');try{let w=1024,h=1024;if(/вертикал|портрет|9:16/i.test(prompt)){w=832;h=1216}else if(/горизонт|широк|16:9/i.test(prompt)){w=1216;h=832}const url=await fetchImage(imageURL(prompt,w,h),pb,0,96,'🖼️ Генерирую и загружаю…');pb.done('Фото готово');const html='<img src="'+url+'" alt="Созданное изображение">';addMessage('ai','Изображение готово: '+prompt,html,false)}catch(e){pb.done('Ошибка');addMessage('ai','Не удалось создать фото: '+e.message,null,false)}}
 function loadImg(url){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(Error('Не удалось загрузить кадр'));i.src=url})}
 const VW=1280,VH=720,FRAME_SECONDS=2.5,FADE=.55;
 function drawCover(ctx,img,progress,reverse){const scale=Math.max(VW/img.width,VH/img.height)*(reverse?1.12-.12*progress:1+.12*progress),w=img.width*scale,h=img.height*scale,pan=(progress-.5)*36*(reverse?-1:1);ctx.drawImage(img,(VW-w)/2+pan,(VH-h)/2,w,h)}
 async function buildWebM(images,pb){if(!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream)throw Error('Запись видео WebM не поддерживается этим браузером');const c=document.createElement('canvas');c.width=VW;c.height=VH;const ctx=c.getContext('2d'),stream=c.captureStream(30),mime=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(x=>MediaRecorder.isTypeSupported(x));const rec=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:2500000}:{}),chunks=[];rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};const stopped=new Promise((resolve,reject)=>{rec.onstop=resolve;rec.onerror=()=>reject(Error('Ошибка записи видео'))});rec.start();const total=images.length*FRAME_SECONDS,start=performance.now();await new Promise(resolve=>{function frame(now){const elapsed=Math.min(total,(now-start)/1000),idx=Math.min(images.length-1,Math.floor(elapsed/FRAME_SECONDS)),local=elapsed-idx*FRAME_SECONDS;ctx.fillStyle='#000';ctx.fillRect(0,0,VW,VH);drawCover(ctx,images[idx],local/FRAME_SECONDS,idx%2===1);if(local>FRAME_SECONDS-FADE&&idx<images.length-1){const p=(local-(FRAME_SECONDS-FADE))/FADE;ctx.globalAlpha=p;drawCover(ctx,images[idx+1],p,idx%2===0);ctx.globalAlpha=1}pb.set(80+19*elapsed/total,'🎞️ Собираю видеофайл…');if(elapsed>=total)resolve();else requestAnimationFrame(frame)}requestAnimationFrame(frame)});rec.stop();stream.getTracks().forEach(t=>t.stop());await stopped;return URL.createObjectURL(new Blob(chunks,{type:rec.mimeType||'video/webm'}))}
-async function generateClip(prompt){if(!prompt)return;addMessage('user','🎬 '+prompt);const pb=progress('Создаю видеокадры');try{const imgs=[];for(let i=0;i<5;i++){pb.set(i/5*78,'🎨 Генерирую кадр '+(i+1)+'/5');const u=await fetchImage(imageURL('cinematic storyboard frame '+(i+1)+' of 5, same scene and consistent characters, 16:9: '+prompt,1280,720),pb,i/5*78,78/5,'🎨 Кадр '+(i+1)+'/5');imgs.push(await loadImg(u))}const url=await buildWebM(imgs,pb);pb.done('Видео WebM готово');addMessage('ai','Готово: видеофайл WebM из пяти сгенерированных ИИ-кадров. Это анимированная последовательность с панорамированием и переходами, не покадровая генерация движения моделью.','<video controls playsinline src="'+url+'"></video><div class="small">1280×720 · около 12,5 секунд · WebM</div>',false)}catch(e){pb.done('Ошибка');addMessage('ai','Не удалось собрать видео: '+e.message,null,false)}}
-async function videoFromPhotos(items){const pb=progress('Собираю видео из фото');try{const imgs=[];for(let i=0;i<items.length;i++){pb.set(i/items.length*15,'📷 Загружаю фото '+(i+1)+'/'+items.length);imgs.push(await loadImg(items[i].data))}const url=await buildWebM(imgs,pb);pb.done('Видео готово');addMessage('ai','Видео из твоих фотографий готово.','<video controls playsinline src="'+url+'"></video><div class="small">Файл WebM · плавный зум, панорама и переходы</div>',false)}catch(e){pb.done('Ошибка');addMessage('ai','Не удалось собрать видео: '+e.message,null,false)}}
+async function generateClip(prompt){
+ if(!prompt)return;addMessage('user','🎬 '+prompt);
+ if(!pollenKey){addMessage('ai','Для настоящей AI-генерации видео нужен личный Pollinations sk_-ключ. Добавь его через ⚙. Без этого приложение не будет притворяться, что создаёт AI-видео.',null,false);return}
+ if(!videoModels.length){addMessage('ai','В текущем каталоге не обнаружена видеомодель. Обнови каталог позже.',null,false);return}
+ const pb=progress('Генерирую видео');
+ try{
+  const model=videoModels.find(x=>/wan|veo|seedance|ltx|kling|video/i.test(x))||videoModels[0];
+  const url='https://gen.pollinations.ai/video/'+encodeURIComponent(prompt)+'?model='+encodeURIComponent(model)+'&duration=5';
+  const r=await fetch(url,{headers:authHeaders()});if(!r.ok)throw Error('Видео API HTTP '+r.status);
+  const blob=await r.blob();if(!blob.type.includes('video')&&blob.size<1000)throw Error('Сервис вернул не видеофайл');
+  const src=URL.createObjectURL(blob);pb.done();
+  addMessage('ai','Готово: AI-видео ('+model+').','<video controls playsinline src="'+src+'"></video><div class="small">Настоящий видеофайл от видеомодели</div>',false);
+ }catch(e){pb.done();addMessage('ai','Не удалось создать видео: '+e.message,null,false)}
+}
+async function videoFromPhotos(items){if(!items.length)return;const pb=progress('Передаю фото видеомодели');try{if(!pollenKey)throw Error('Нужен личный Pollinations sk_-ключ в ⚙');const model=videoModels.find(x=>/wan|veo|seedance|ltx|kling|video/i.test(x));if(!model)throw Error('Нет доступной видеомодели с поддержкой каталога');const content=[{type:'text',text:'Create a short video using the attached image as the first frame. Preserve the main subject. Add natural motion. '+(input.value||'')}];content.push({type:'image_url',image_url:{url:items[0].data}});const r=await fetch('https://gen.pollinations.ai/v1/chat/completions',{method:'POST',headers:authHeaders(true),body:JSON.stringify({model,messages:[{role:'user',content}]})});if(!r.ok)throw Error('Video model HTTP '+r.status);const j=await r.json(),txt=j.choices?.[0]?.message?.content||'';const match=txt.match(/https?:\\/\\/[^\\s)]+\\.(?:mp4|webm)(?:\\?[^\\s)]*)?/i);if(match){pb.done();addMessage('ai','Видео готово: '+model,'<video controls playsinline src="'+esc(match[0])+'"></video>',false)}else{pb.done();addMessage('ai',txt||'Модель не вернула ссылку на видео.',null,false)}}catch(e){pb.done();addMessage('ai','Не удалось сделать видео из фото: '+e.message,null,false)}}
 async function send(){const text=input.value.trim(),files=attachments.slice();if(!text&&!files.length)return;input.value='';attachments=[];renderChips();const command=text.match(/^\/(img|image|фото|clip|video|видео|vid)\s*(.*)$/i);if(mode==='img'||command&&/^(img|image|фото)$/i.test(command[1]))return generateImage(command?command[2]:text);if(mode==='clip'||command&&/^(clip|video|видео)$/i.test(command[1]))return generateClip(command?command[2]:text);if(command&&command[1].toLowerCase()==='vid'){const photos=files.filter(x=>x.type==='image');if(photos.length)return videoFromPhotos(photos);if(text.length>4)return generateClip(text.slice(4));addMessage('ai','Прикрепи фото и отправь /vid.',null,false);return}
 const imgs=files.filter(x=>x.type==='image').map(x=>x.data);const vids=files.filter(x=>x.type==='video');let prompt=text||'Проанализируй вложения и опиши их';files.filter(x=>x.type==='text').forEach(x=>prompt+='\n\nФайл '+x.name+':\n'+x.content);vids.forEach(v=>prompt+='\nВидео '+v.name+': проанализируй ключевые кадры по порядку.');if(vids.length)imgs.push(...vids.flatMap(v=>v.frames));addMessage('user',text||'📎 Вложения',esc(text||'Вложения: '+files.map(x=>x.name).join(', '))+(imgs.length?'<div class="small">Изображений/кадров: '+imgs.length+'</div>':''));const pb=progress('Отправляю запрос');const stop=timerProgress(pb);try{const ans=await ask(prompt,imgs);stop();pb.done('Ответ получен');addMessage('ai',ans)}catch(e){stop();pb.done('Ошибка');addMessage('ai','❌ '+e.message,null,false)}}
 $('send').onclick=send;input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();send()}});
