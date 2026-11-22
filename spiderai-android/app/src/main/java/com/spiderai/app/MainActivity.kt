@@ -3,6 +3,8 @@ package com.spiderai.app
 import androidx.activity.ComponentActivity
 import android.app.DownloadManager
 import android.content.Context
+import android.content.Intent
+import android.app.Activity
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -27,6 +29,8 @@ import java.io.File
 class MainActivity : ComponentActivity() {
     private lateinit var webView: WebView
     private var model: LlamaModel? = null
+    private var fileChooserCallback: ValueCallback<Array<Uri>>? = null
+    private val fileChooserRequest = 4107
     private var modelState = "Подготовка локального ИИ…"
     private var downloadId = -1L
     private val handler = Handler(Looper.getMainLooper())
@@ -45,8 +49,22 @@ class MainActivity : ComponentActivity() {
         webView.addJavascriptInterface(LocalAI(), "SpiderLocal")
         webView.webChromeClient = object : WebChromeClient() {
             override fun onShowFileChooser(view: WebView, callback: ValueCallback<Array<Uri>>, params: FileChooserParams): Boolean {
-                callback.onReceiveValue(null)
-                return false
+                fileChooserCallback?.onReceiveValue(null)
+                fileChooserCallback = callback
+                return try {
+                    val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+                        addCategory(Intent.CATEGORY_OPENABLE)
+                        type = "*/*"
+                        putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/*", "video/*", "text/*", "application/*"))
+                        putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                    }
+                    startActivityForResult(Intent.createChooser(intent, "Выбрать фото, видео или файл"), fileChooserRequest)
+                    true
+                } catch (e: Exception) {
+                    fileChooserCallback = null
+                    callback.onReceiveValue(null)
+                    false
+                }
             }
         }
         webView.webViewClient = object : WebViewClientCompat() {
@@ -56,6 +74,24 @@ class MainActivity : ComponentActivity() {
         setContentView(webView)
         webView.loadUrl("https://appassets.androidplatform.net/assets/www/index.html")
         prepareModel()
+    }
+
+    @Deprecated("Deprecated in Android API; retained for WebView file chooser compatibility")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != fileChooserRequest) return
+        val callback = fileChooserCallback ?: return
+        fileChooserCallback = null
+        if (resultCode != Activity.RESULT_OK) {
+            callback.onReceiveValue(null)
+            return
+        }
+        val uris = mutableListOf<Uri>()
+        data?.clipData?.let { clip ->
+            for (i in 0 until clip.itemCount) clip.getItemAt(i).uri?.let { uris.add(it) }
+        }
+        if (uris.isEmpty()) data?.data?.let { uris.add(it) }
+        callback.onReceiveValue(uris.distinct().toTypedArray())
     }
 
     private fun modelFile() = File(getExternalFilesDir("models"), modelName)
