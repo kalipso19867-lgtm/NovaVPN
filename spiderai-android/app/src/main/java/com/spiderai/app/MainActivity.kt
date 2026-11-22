@@ -17,6 +17,8 @@ import android.webkit.WebView
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewClientCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import dev.ffmpegkit.llama.Llama
 import dev.ffmpegkit.llama.LlamaConfig
 import dev.ffmpegkit.llama.LlamaModel
@@ -55,10 +57,10 @@ class MainActivity : ComponentActivity() {
                     val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
                         addCategory(Intent.CATEGORY_OPENABLE)
                         type = "*/*"
-                        putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/*", "video/*", "text/*", "application/*"))
+                        putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/*", "video/*", "audio/*", "text/*", "application/*"))
                         putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
                     }
-                    startActivityForResult(Intent.createChooser(intent, "Выбрать фото, видео или файл"), fileChooserRequest)
+                    startActivityForResult(Intent.createChooser(intent, "Выбрать фото, видео, аудио или файл"), fileChooserRequest)
                     true
                 } catch (e: Exception) {
                     fileChooserCallback = null
@@ -72,6 +74,13 @@ class MainActivity : ComponentActivity() {
                 loader.shouldInterceptRequest(request.url)
         }
         setContentView(webView)
+        // Android 15 edge-to-edge: keep WebView content below status/navigation bars.
+        ViewCompat.setOnApplyWindowInsetsListener(webView) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(0, bars.top, 0, bars.bottom)
+            insets
+        }
+        ViewCompat.requestApplyInsets(webView)
         webView.loadUrl("https://appassets.androidplatform.net/assets/www/index.html")
         prepareModel()
     }

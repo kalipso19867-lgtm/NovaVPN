@@ -6,97 +6,63 @@
 <meta name="theme-color" content="#e62429">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Spider AI</title>
-<style>
-:root{color-scheme:dark;--bg:#212121;--panel:#2f2f2f;--panel2:#383838;--line:#454545;--text:#ececec;--muted:#a5a5a5;--accent:#10a37f;--accent2:#19c79a;--radius:18px;--safe:env(safe-area-inset-bottom,0px)}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;width:100%;height:100%;height:100dvh;overflow:hidden}
-body{display:flex;flex-direction:column;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-button,input,select{font:inherit;color:inherit}
-button{border:0;cursor:pointer;touch-action:manipulation}
-button:disabled{opacity:.38;cursor:not-allowed}
-header{height:58px;flex:none;display:flex;align-items:center;gap:9px;padding:0 12px;background:var(--bg);border-bottom:1px solid #ffffff0d}
-.brand{display:flex;align-items:center;gap:9px;flex:1;min-width:0}
-.logo{width:34px;height:34px;border-radius:11px;background:linear-gradient(145deg,#19c79a,#087b63);display:grid;place-items:center;font-size:19px}
-header h1{font-size:16px;font-weight:650;margin:0;letter-spacing:.1px}
-.header-actions{display:flex;gap:5px}
-.icon-btn{width:40px;height:40px;border-radius:13px;background:transparent;color:#d6d6d6;display:grid;place-items:center;font-size:18px}
-.icon-btn:active,.tool-btn:active,.send-btn:active{transform:scale(.96);background:#ffffff18}
-.icon-btn:hover,.tool-btn:hover{background:#ffffff12}
-#modelSel{max-width:125px;min-width:0;height:36px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:0 8px;font-size:11px;color:#ddd}
-#chat{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:20px 14px 24px;display:flex;flex-direction:column;gap:15px;scroll-behavior:smooth}
-.welcome{width:min(100%,720px);margin:auto;padding:25px 8px;text-align:center}
-.welcome-logo{width:62px;height:62px;border-radius:21px;margin:0 auto 18px;background:linear-gradient(145deg,#19c79a,#087b63);display:grid;place-items:center;font-size:32px;box-shadow:0 8px 35px #10a37f30}
-.welcome h2{font-size:clamp(24px,6vw,32px);font-weight:650;line-height:1.2;margin:0 0 10px}
-.welcome p{margin:0;color:var(--muted);font-size:14px}
-.suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:25px auto 0;max-width:620px;text-align:left}
-.suggestion{min-height:70px;padding:12px 14px;border:1px solid var(--line);border-radius:15px;background:#ffffff06;color:#ddd;text-align:left;font-size:13px}
-.suggestion b{display:block;color:#f0f0f0;font-size:13px;margin-bottom:3px}
-.suggestion span{color:var(--muted);font-size:11px}
-.msg{width:fit-content;max-width:min(92%,760px);padding:11px 15px;border-radius:18px;line-height:1.6;overflow-wrap:anywhere;background:var(--panel2);border:1px solid #ffffff08}
-.user{align-self:flex-end;background:#0b6e59;border-color:#13866e;color:#fff;border-bottom-right-radius:6px}
-.ai{align-self:flex-start;background:transparent;border-color:transparent;padding:7px 3px;max-width:min(96%,780px);border-bottom-left-radius:6px}
-.msg img,.msg video{display:block;max-width:100%;max-height:420px;border-radius:12px;margin-top:8px}
-.msg pre{white-space:pre-wrap;overflow:auto;background:#161616;padding:10px;border-radius:9px}
-.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
-.actions button{padding:7px 10px;border-radius:10px;background:#ffffff0b;color:#bdbdbd;font-size:12px;border:1px solid #ffffff12}
-.actions button:active{background:#ffffff20}
-#modelStatus{flex:none;padding:4px 12px;color:#929292;text-align:center;font-size:11px;min-height:22px}
-#chiprow{display:flex;gap:7px;overflow-x:auto;padding:2px 12px;white-space:nowrap;flex:none}
-.chip{display:inline-flex;align-items:center;gap:7px;padding:6px 9px;border-radius:10px;background:#ffffff0c;border:1px solid var(--line);font-size:12px;color:#ddd}
-.chip button{background:transparent;color:#aaa;padding:0 3px}
-.tools{flex:none;display:flex;gap:7px;overflow-x:auto;padding:8px 12px 3px;scrollbar-width:none}
-.tools::-webkit-scrollbar{display:none}
-.tool-btn{white-space:nowrap;display:flex;align-items:center;gap:7px;padding:8px 12px;min-height:38px;border:1px solid var(--line);border-radius:12px;background:transparent;color:#c6c6c6;font-size:12px}
-.tool-btn.active{background:#10a37f20;border-color:#10a37f80;color:#6fe0bd}
-.tool-btn .tool-icon{font-size:15px}
-.tool-btn.soon{opacity:.42}
-.composer-wrap{flex:none;padding:8px 12px calc(10px + var(--safe));background:linear-gradient(180deg,transparent,var(--bg) 20%)}
-.composer{width:min(100%,820px);margin:0 auto;display:flex;align-items:flex-end;gap:8px;padding:8px;border-radius:24px;background:var(--panel);border:1px solid #555;box-shadow:0 5px 25px #0002}
-.composer:focus-within{border-color:#777;box-shadow:0 0 0 1px #777}
-#prompt{flex:1;min-width:0;max-height:150px;min-height:42px;resize:none;border:0;outline:0;background:transparent;color:var(--text);padding:10px 5px;font:15px/1.45 inherit}
-#prompt::placeholder{color:#999}
-.send-btn{width:42px;height:42px;flex:none;border-radius:15px;background:var(--accent);color:white;font-size:19px;display:grid;place-items:center}
-.send-btn:disabled{background:#555;opacity:1}
-.composer-hint{text-align:center;color:#858585;font-size:10px;padding-top:7px}
-.progress{margin-top:4px;min-width:min(260px,70vw)}.progress-label{display:flex;justify-content:space-between;gap:12px;font-size:12px;margin-bottom:5px}.track{height:7px;border-radius:8px;background:#ffffff20;overflow:hidden}.fill{height:100%;width:0;background:linear-gradient(90deg,#10a37f,#45d6ae);transition:width .2s}
-#fileInput{position:fixed;left:-10000px;width:1px;height:1px;opacity:0}
-a{color:#73d9bd}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #5bd9b0;outline-offset:2px}
-@media(max-width:420px){header{padding:0 8px;gap:5px}#modelSel{max-width:98px;font-size:10px}.icon-btn{width:36px}.suggestions{gap:7px}.suggestion{padding:10px;min-height:66px}.tool-btn{padding:7px 10px}.composer-wrap{padding-left:8px;padding-right:8px}}
-@media(min-width:700px){#chat{padding:28px 24px}.composer-wrap{padding-left:24px;padding-right:24px}.welcome{padding:35px 10px}}
+<style>:root{color-scheme:light;--bg:#f6f8fc;--surface:#fff;--surface2:#f0f3fa;--line:#e3e8f1;--text:#182238;--muted:#77839a;--accent:#6558e8;--accent2:#8b7cf6;--safe:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;height:100dvh;overflow:hidden}body{display:flex;flex-direction:column;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}button{border:0;cursor:pointer;touch-action:manipulation}button:disabled{opacity:.4}
+header{height:68px;flex:none;display:flex;align-items:center;gap:10px;padding:0 16px;background:#ffffffed;border-bottom:1px solid var(--line);box-shadow:0 3px 18px #26375b08}.brand{display:flex;align-items:center;gap:11px;flex:1;min-width:0}.logo,.welcome-logo{display:grid;place-items:center;color:#fff;background:linear-gradient(145deg,#a89cff,#6558e8);box-shadow:0 8px 20px #6558e82b}.logo{width:42px;height:42px;border-radius:15px;font-size:23px}header h1{font-size:17px;font-weight:750;margin:0}.header-actions{display:flex;gap:5px}.icon-btn{width:40px;height:40px;border-radius:14px;background:transparent;color:#64718a;display:grid;place-items:center;font-size:19px}#modelSel{max-width:138px;min-width:0;height:38px;border:1px solid var(--line);border-radius:13px;background:#fff;padding:0 9px;font-size:11px;color:#53617a}
+#chat{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:18px 15px 24px;display:flex;flex-direction:column;gap:15px;scroll-behavior:smooth}.welcome{width:min(100%,720px);margin:auto;padding:24px 8px;text-align:center}.welcome-logo{width:76px;height:76px;border-radius:25px;margin:0 auto 19px;font-size:37px;box-shadow:0 12px 34px #6558e82c}.welcome h2{font-size:clamp(25px,6vw,34px);font-weight:780;letter-spacing:-1px;line-height:1.18;margin:0 0 9px}.welcome p{margin:0;color:var(--muted);font-size:14px}.suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:27px auto 0;max-width:620px;text-align:left}.suggestion{min-height:82px;padding:14px;border:1px solid var(--line);border-radius:18px;background:#fff;color:var(--text);text-align:left;font-size:13px;box-shadow:0 4px 14px #273b6408}.suggestion b{display:block;color:#28334a;font-size:13px;margin-bottom:4px}.suggestion span{color:var(--muted);font-size:11px}
+.msg{width:fit-content;max-width:min(92%,760px);padding:12px 16px;border-radius:19px;line-height:1.65;overflow-wrap:anywhere;background:#fff;border:1px solid var(--line);box-shadow:0 4px 16px #24365b08}.user{align-self:flex-end;background:#eeeaff;border-color:#dcd5ff;color:#30266f;border-bottom-right-radius:7px}.ai{align-self:flex-start;background:transparent;border-color:transparent;padding:7px 3px;max-width:min(96%,780px);box-shadow:none}.msg img,.msg video{display:block;max-width:100%;max-height:420px;border-radius:14px;margin-top:8px}.msg pre{white-space:pre-wrap;overflow:auto;background:#f0f2f8;padding:10px;border-radius:10px}.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.actions button{padding:7px 11px;border-radius:11px;background:#fff;color:#69758c;font-size:12px;border:1px solid var(--line)}
+#modelStatus{flex:none;padding:5px 12px;color:#8792a6;text-align:center;font-size:11px;min-height:23px}#chiprow{display:flex;gap:7px;overflow-x:auto;padding:2px 12px;white-space:nowrap;flex:none}.chip{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:11px;background:#fff;border:1px solid var(--line);font-size:12px;color:#53617a}.chip button{background:transparent;color:#8993a6;padding:0 3px}
+.tools{flex:none;display:flex;gap:8px;overflow-x:auto;padding:10px 13px 6px;scrollbar-width:none;background:#ffffffb8;border-top:1px solid var(--line)}.tools::-webkit-scrollbar{display:none}.tool-btn{white-space:nowrap;display:flex;align-items:center;gap:7px;padding:9px 13px;min-height:40px;border:1px solid var(--line);border-radius:14px;background:#fff;color:#65718a;font-size:12px}.tool-btn.active{background:#eeeaff;border-color:#d9d1ff;color:#6558e8;font-weight:700}.tool-btn .tool-icon{font-size:15px}
+.learn-panel{position:fixed;inset:0;z-index:20;background:#1d294766;display:none;align-items:flex-end;justify-content:center}.learn-panel.open{display:flex}.learn-card{width:min(100%,760px);max-height:88dvh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:24px 24px 0 0;padding:20px 16px calc(20px + var(--safe));box-shadow:0 -12px 45px #1c2b4b22}.learn-card h2{margin:0 0 6px;font-size:21px}.learn-card p{color:var(--muted);font-size:12px}.learn-card textarea,.learn-card input{width:100%;background:#f7f8fc;border:1px solid var(--line);border-radius:12px;padding:11px;margin:5px 0 10px;color:var(--text)}.learn-card textarea{min-height:92px;resize:vertical}.learn-actions{display:flex;gap:8px;flex-wrap:wrap}.learn-actions button{padding:10px 13px;border-radius:12px;background:#6558e8;color:white}.learn-actions .secondary{background:#f1f2f8;color:#56627a;border:1px solid var(--line)}.learn-stats{font-size:12px;color:#6558e8;margin:8px 0}.learn-note{padding:10px;border-radius:12px;background:#f5f6fb;font-size:11px;color:#738097}
+.composer-wrap{flex:none;padding:8px 12px calc(12px + var(--safe));background:linear-gradient(180deg,#f6f8fc00,#f6f8fc 18%)}.composer{width:min(100%,820px);margin:0 auto;display:flex;align-items:flex-end;gap:8px;padding:8px 9px 8px 11px;border-radius:25px;background:#fff;border:1px solid #e0e5ef;box-shadow:0 8px 28px #283b650e}.composer:focus-within{border-color:#b5aaff;box-shadow:0 0 0 3px #6558e812}#prompt{flex:1;min-width:0;max-height:150px;min-height:42px;resize:none;border:0;outline:0;background:transparent;color:var(--text);padding:10px 5px;font:15px/1.45 inherit}#prompt::placeholder{color:#a0a9b9}.send-btn{width:43px;height:43px;flex:none;border-radius:16px;background:linear-gradient(145deg,#8d80f7,#6558e8);color:white;font-size:20px;display:grid;place-items:center}.composer-hint{text-align:center;color:#9aa4b5;font-size:10px;padding-top:7px}.progress{margin-top:4px;min-width:min(260px,70vw)}.progress-label{display:flex;justify-content:space-between;gap:12px;font-size:12px;margin-bottom:5px}.track{height:7px;border-radius:8px;background:#e9eaf2;overflow:hidden}.fill{height:100%;width:0;background:linear-gradient(90deg,#6558e8,#a99cff);transition:width .2s}#fileInput{position:fixed;left:-10000px;width:1px;height:1px;opacity:0}a{color:#6558e8}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #8d80f7;outline-offset:2px}
+@media(max-width:420px){header{padding:0 9px;gap:5px}#modelSel{max-width:105px;font-size:10px}.icon-btn{width:36px}.suggestions{gap:8px}.suggestion{padding:11px;min-height:75px}.tool-btn{padding:8px 11px}.composer-wrap{padding-left:8px;padding-right:8px}}@media(min-width:700px){#chat{padding:28px 24px}.composer-wrap{padding-left:24px;padding-right:24px}.welcome{padding:35px 10px}}/* CYBER TECH visual system — option 2 */
+:root{color-scheme:dark;--bg:#07111f;--surface:#0c1b2d;--surface2:#10243a;--line:#1c3a56;--text:#e6f4ff;--muted:#8aa8bf;--accent:#00c8ff;--accent2:#347dff;--safe:env(safe-area-inset-bottom,0px)}
+body{background:radial-gradient(ellipse at 50% -20%,#123b62 0%,#07111f 58%);color:var(--text)}
+header{background:#081728f2;border-bottom:1px solid #1a4566;box-shadow:0 4px 24px #00aaff0b}
+.logo,.welcome-logo{background:linear-gradient(145deg,#00d5ff,#1767e8);box-shadow:0 0 26px #00bfff38;color:#001323}
+.logo{border:1px solid #65e5ff66}
+header h1{letter-spacing:.7px;text-shadow:0 0 14px #00bfff40}
+.icon-btn{color:#9bc9e6}.icon-btn:active,.tool-btn:active,.send-btn:active{background:#00c8ff20}
+#modelSel{background:#0b1c30;border-color:#245273;color:#bfeaff}
+#chat{background-image:linear-gradient(#12314a12 1px,transparent 1px),linear-gradient(90deg,#12314a12 1px,transparent 1px);background-size:28px 28px}
+.welcome-logo{border:1px solid #65e5ff70;box-shadow:0 0 0 8px #00bfff0b,0 0 42px #00bfff3b}
+.welcome h2{color:#eaf8ff;text-shadow:0 0 22px #00aaff25;letter-spacing:-.5px}
+.welcome p{color:#8eacc4}
+.suggestion{background:linear-gradient(145deg,#102941,#0a1b2d);border-color:#204966;color:#e4f6ff;box-shadow:inset 0 1px #ffffff08,0 7px 22px #0003}
+.suggestion b{color:#e5f7ff}.suggestion span{color:#86a9c2}.suggestion:active{border-color:#00c8ff}
+.msg{background:#0d2237;border-color:#1b4564;color:#d9efff;box-shadow:0 5px 18px #0003}
+.user{background:linear-gradient(135deg,#075c85,#123d80);border-color:#168fc0;color:#fff}
+.ai{background:transparent;border-color:transparent;box-shadow:none}
+.msg pre{background:#061321;color:#b9e8ff}
+.actions button{background:#0b2033;color:#9bc9e6;border-color:#204966}
+#modelStatus{color:#7da9c6}
+.chip{background:#0c2034;border-color:#204966;color:#b8dff5}.chip button{color:#86abc3}
+.tools{background:#081728f2;border-top:1px solid #1a4566}
+.tool-btn{background:#0b1d30;border-color:#1c405c;color:#9bbbd1}
+.tool-btn.active{background:#063b59;border-color:#00bfff;color:#69e4ff;box-shadow:inset 0 0 18px #00aaff18}
+.learn-panel{background:#020914c9}.learn-card{background:#0b1b2d;border-color:#1c4564;box-shadow:0 -12px 45px #0009}
+.learn-card p{color:#91afc6}.learn-card textarea,.learn-card input{background:#071525;border-color:#23445e;color:#e3f5ff}
+.learn-actions button{background:linear-gradient(135deg,#00bfe8,#2469e8);color:#001523;font-weight:700}
+.learn-actions .secondary{background:#10273d;color:#b6d8ed;border-color:#244963}
+.learn-stats{color:#55ddff}.learn-note{background:#10243a;color:#8eafc7}
+.composer-wrap{background:linear-gradient(180deg,#07111f00,#07111f 18%)}
+.composer{background:#0b1d30;border-color:#24506e;box-shadow:0 8px 30px #0005}
+.composer:focus-within{border-color:#00bfff;box-shadow:0 0 0 3px #00bfff18}
+#prompt{color:#e6f5ff}#prompt::placeholder{color:#7396b0}
+.send-btn{background:linear-gradient(145deg,#00d5ff,#1767e8);color:#001323;box-shadow:0 5px 18px #00bfff38}
+.composer-hint{color:#6689a4}.track{background:#16334b}.fill{background:linear-gradient(90deg,#00c8ff,#347dff)}
+a{color:#55dcff}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #00c8ff}
+
+
 </style>
 </head>
-<body>
-<header>
- <div class="brand"><div class="logo">🕷</div><h1>Spider AI</h1></div>
- <select id="modelSel" aria-label="Локальная модель"><option>Qwen2.5 0.5B · локально</option></select>
- <div class="header-actions"><button class="icon-btn" id="settings" title="Состояние и настройки" aria-label="Настройки">⚙</button><button class="icon-btn" id="clear" title="Новый чат" aria-label="Новый чат">＋</button></div>
-</header>
-<main id="chat">
- <section class="welcome" id="welcome">
-  <div class="welcome-logo">🕷</div><h2>Чем займёмся?</h2><p>Локальный ИИ-помощник. Работает на устройстве, без API-ключей.</p>
-  <div class="suggestions">
-   <button class="suggestion" data-prompt="Объясни сложную тему простыми словами"><b>📚 Объяснить тему</b><span>Понятно и по шагам</span></button>
-   <button class="suggestion" data-prompt="Помоги написать и проверить код"><b>💻 Помочь с кодом</b><span>Разработка и отладка</span></button>
-   <button class="suggestion" data-prompt="Составь подробный план решения моей задачи"><b>🧭 Составить план</b><span>Разбить задачу на этапы</span></button>
-   <button class="suggestion" data-prompt="Придумай несколько необычных идей проекта"><b>💡 Придумать идеи</b><span>Идеи и варианты</span></button>
-  </div>
- </section>
-</main>
-<div id="modelStatus">Проверяю локальную модель…</div>
-<div id="chiprow"></div>
-<nav class="tools" aria-label="Инструменты">
- <button class="tool-btn active" data-mode="chat"><span class="tool-icon">✳</span>Чат</button>
- <button class="tool-btn" id="attach"><span class="tool-icon">📎</span>Файлы</button>
- <button class="tool-btn" data-mode="img"><span class="tool-icon">▧</span>Создать фото</button>
- <button class="tool-btn" data-mode="clip"><span class="tool-icon">▷</span>Создать видео</button>
- <button class="tool-btn" data-mode="edit"><span class="tool-icon">✧</span>Изменить медиа</button>
-</nav>
-<div class="composer-wrap">
- <div class="composer"><button class="icon-btn" id="mic" title="Голосовой ввод" aria-label="Голосовой ввод">🎙</button><textarea id="prompt" rows="1" placeholder="Спроси что-нибудь…" autocomplete="off"></textarea><button class="send-btn" id="send" aria-label="Отправить">↑</button></div>
- <div class="composer-hint">Spider AI может ошибаться. Проверяй важную информацию.</div>
-</div>
-<input id="fileInput" type="file" multiple accept="image/*,video/*,.txt,.md,.json,.js,.ts,.py,.html,.css,.csv,.log,.xml,.yml,.yaml,.java,.sql">
+<body><header><div class="brand"><div class="logo">🕷</div><h1>Spider AI</h1></div><select id="modelSel" aria-label="Локальная модель"><option>Qwen2.5 0.5B · локально</option></select><div class="header-actions"><button class="icon-btn" id="settings" title="Настройки">⚙</button><button class="icon-btn" id="clear" title="Новый чат">＋</button></div></header>
+<main id="chat"><section class="welcome" id="welcome"><div class="welcome-logo">🕷</div><h2>Ваши идеи. Один интеллект.</h2><p>Spider AI — помощник для вопросов, проектов и творчества</p><div class="suggestions"><button class="suggestion" data-prompt="Объясни сложную тему простыми словами"><b>📚 Объяснить тему</b><span>Понятно и по шагам</span></button><button class="suggestion" data-prompt="Помоги написать и проверить код"><b>💻 Разработка</b><span>Код, идеи и отладка</span></button><button class="suggestion" data-prompt="Составь подробный план решения моей задачи"><b>🧭 План действий</b><span>От идеи до результата</span></button><button class="suggestion" data-prompt="Придумай несколько необычных идей проекта"><b>✨ Новые идеи</b><span>Найти нестандартный подход</span></button></div></section></main><div id="modelStatus">Подключаю локальный интеллект…</div><div id="chiprow"></div>
+<nav class="tools" aria-label="Инструменты"><button class="tool-btn active" data-mode="chat"><span class="tool-icon">✳</span>Чат</button><button class="tool-btn" id="attach"><span class="tool-icon">＋</span>Файлы</button><button class="tool-btn" id="learnOpen"><span class="tool-icon">🧠</span>База знаний</button><button class="tool-btn" data-mode="img"><span class="tool-icon">▧</span>Фото</button><button class="tool-btn" data-mode="clip"><span class="tool-icon">▷</span>Видео</button><button class="tool-btn" data-mode="edit"><span class="tool-icon">✧</span>Редактор</button></nav>
+<section class="learn-panel" id="learnPanel" role="dialog" aria-modal="true" aria-labelledby="learnTitle"><div class="learn-card"><h2 id="learnTitle">🧠 База знаний Spider AI</h2><p>Добавляйте материалы и примеры ответов. Подходящие фрагменты будут учитываться в контексте диалога.</p><div class="learn-stats" id="learnStats">Загружаю базу знаний…</div><label for="learnText">Добавить знания вручную</label><textarea id="learnText" placeholder="Инструкции, факты, заметки или описание проекта…"></textarea><input id="learnTitleInput" placeholder="Название материала (необязательно)"><div class="learn-actions"><button id="learnSaveText">Сохранить знания</button><button class="secondary" id="learnPickFiles">＋ Загрузить документы</button><button class="secondary" id="learnExport">Экспорт базы</button></div><input id="learnFiles" type="file" hidden multiple accept=".txt,.md,.json,.js,.ts,.py,.html,.css,.csv,.log,.xml,.yml,.yaml,.java,.sql,.kt,.gradle,.properties"><hr style="border:0;border-top:1px solid var(--line);margin:16px 0"><b>Сохранить эталонный ответ</b><input id="learnQuestion" placeholder="Вопрос или задача"><textarea id="learnAnswer" placeholder="Правильный ответ, которому нужно следовать…"></textarea><div class="learn-actions"><button id="learnSaveExample">Сохранить пример</button><button class="secondary" id="learnClose">Закрыть</button><button class="secondary" id="learnClear">Очистить базу</button></div><div class="learn-note">Это локальная база знаний (RAG), а не изменение весов нейросети. Данные остаются на устройстве. Не добавляйте пароли и секретные ключи.</div></div></section>
+<div class="composer-wrap"><div class="composer"><button class="icon-btn" id="mic" title="Голосовой ввод">🎙</button><textarea id="prompt" rows="1" placeholder="Напишите сообщение…" autocomplete="off"></textarea><button class="send-btn" id="send" aria-label="Отправить">↑</button></div><div class="composer-hint">Spider AI может ошибаться. Проверяйте важную информацию.</div></div><input id="fileInput" type="file" multiple accept="image/*,video/*,audio/*,.txt,.md,.json,.js,.ts,.py,.html,.css,.csv,.log,.xml,.yml,.yaml,.java,.sql">
 <script>
 const $=id=>document.getElementById(id), chat=$('chat'), input=$('prompt'), fileInput=$('fileInput');
 const SYSTEM='Ты — Spider AI, универсальный ИИ-помощник. Отвечай на русском, понятно, структурированно и по делу.';
@@ -166,6 +132,7 @@ $('settings').onclick=()=>{const action=confirm('Spider AI · Настройки
 function configurePollinationsKeyClear(){pollenKey='';try{localStorage.removeItem('sp_pollinations_key')}catch(e){}alert('Ключ удалён с этого устройства.')}
 function authHeaders(json=false){const h={};if(json)h['Content-Type']='application/json';if(pollenKey)h.Authorization='Bearer '+pollenKey;return h}
 async function ask(text,images=[]){
+ text=await enrichWithKnowledge(text);
  if(!window.SpiderLocal)throw Error('Локальный движок недоступен. Установи Android APK, а не открывай веб-версию.');
  if(images.length)text+='\\n\\nПримечание: в этой версии локальная модель обрабатывает текст. Вложения пока не передаются в модель.';
  const id='sp-'+Date.now()+'-'+Math.random().toString(36).slice(2);
@@ -182,12 +149,12 @@ window.onSpiderLocalResult=(id,answer,error)=>{
 };
 window.onSpiderLocalStatus=(status)=>{const el=$('modelStatus');if(el)el.textContent=status;};
 
-function renderChips(){const w=$('chiprow');w.innerHTML='';attachments.forEach((a,i)=>{const c=document.createElement('span');c.className='chip';c.textContent=(a.type==='image'?'📷 ':a.type==='video'?'🎬 ':'📄 ')+a.name+' ';const b=document.createElement('button');b.textContent='✖';b.onclick=()=>{attachments.splice(i,1);renderChips()};c.append(b);w.append(c)})}
+function renderChips(){const w=$('chiprow');w.innerHTML='';attachments.forEach((a,i)=>{const c=document.createElement('span');c.className='chip';c.textContent=(a.type==='image'?'📷 ':a.type==='video'?'🎬 ':a.type==='audio'?'🎵 ':'📄 ')+a.name+' ';const b=document.createElement('button');b.textContent='✖';b.onclick=()=>{attachments.splice(i,1);renderChips()};c.append(b);w.append(c)})}
 function readFile(f){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(f)})}
 async function compressImage(file){const data=await readFile(file);return new Promise(resolve=>{const im=new Image();im.onload=()=>{const scale=Math.min(1,1000/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*scale);c.height=Math.round(im.height*scale);c.getContext('2d').drawImage(im,0,0,c.width,c.height);resolve(c.toDataURL('image/jpeg',.82))};im.onerror=()=>resolve(null);im.src=data})}
 async function extractFrames(file,count=4){const u=URL.createObjectURL(file),v=document.createElement('video');v.preload='auto';v.muted=true;v.playsInline=true;return new Promise(resolve=>{v.onerror=()=>{URL.revokeObjectURL(u);resolve([])};v.onloadedmetadata=async()=>{const w=Math.min(640,v.videoWidth||640),h=Math.max(1,Math.round((v.videoHeight||360)*w/(v.videoWidth||640))),c=document.createElement('canvas'),ctx=c.getContext('2d');c.width=w;c.height=h;const out=[];for(let i=0;i<count;i++){const t=Math.min(v.duration*(i+.5)/count,Math.max(0,v.duration-.06));await new Promise(ok=>{let settled=false;const finish=()=>{if(settled)return;settled=true;try{ctx.drawImage(v,0,0,w,h);out.push(c.toDataURL('image/jpeg',.76))}catch(e){}ok()};v.addEventListener('seeked',finish,{once:true});v.currentTime=t;setTimeout(finish,4500)})}URL.revokeObjectURL(u);resolve(out)};v.src=u;v.load()})}
-fileInput.onchange=async()=>{for(const f of [...fileInput.files]){if(f.type.startsWith('image/')){if(f.size>12*1024*1024){alert('Фото должно быть до 12 МБ');continue}const data=await compressImage(f);if(data)attachments.push({type:'image',data,name:f.name})}else if(f.type.startsWith('video/')){const frames=await extractFrames(f,4);if(frames.length)attachments.push({type:'video',frames,name:f.name})}else{try{attachments.push({type:'text',content:(await f.text()).slice(0,20000),name:f.name})}catch(e){}}}fileInput.value='';renderChips()};
-$('attach').onclick=()=>fileInput.click();$('attach').onclick=()=>fileInput.click();document.querySelectorAll('.tool-btn[data-mode]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tool-btn[data-mode]').forEach(x=>x.classList.toggle('active',x===b));mode=b.dataset.mode;input.placeholder=mode==='img'?'Опиши изображение, которое нужно создать…':mode==='clip'?'Опиши видео, которое нужно создать…':mode==='edit'?'Прикрепи фото/видео и опиши изменения…':'Спроси что-нибудь…';input.focus()});
+fileInput.onchange=async()=>{for(const f of [...fileInput.files]){if(f.type.startsWith('audio/')){if(f.size>25*1024*1024){alert('Аудиофайл должен быть до 25 МБ');continue}attachments.push({type:'audio',url:URL.createObjectURL(f),name:f.name,size:f.size,mime:f.type})}else if(f.type.startsWith('image/')){if(f.size>12*1024*1024){alert('Фото должно быть до 12 МБ');continue}const data=await compressImage(f);if(data)attachments.push({type:'image',data,name:f.name})}else if(f.type.startsWith('video/')){const frames=await extractFrames(f,4);if(frames.length)attachments.push({type:'video',frames,name:f.name})}else{try{attachments.push({type:'text',content:(await f.text()).slice(0,20000),name:f.name})}catch(e){}}}fileInput.value='';renderChips()};
+$('attach').onclick=()=>fileInput.click();document.querySelectorAll('.tool-btn[data-mode]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tool-btn[data-mode]').forEach(x=>x.classList.toggle('active',x===b));mode=b.dataset.mode;input.placeholder=mode==='img'?'Опиши изображение, которое нужно создать…':mode==='clip'?'Опиши видео, которое нужно создать…':mode==='edit'?'Прикрепи фото/видео и опиши изменения…':'Спроси что-нибудь…';input.focus()});
 async function editImage(prompt,items){
  if(!items.length){addMessage('ai','Прикрепи изображение и напиши, что изменить.',null,false);return}
  if(!pollenKey){addMessage('ai','Для редактирования нужен Pollinations sk_-ключ. Добавь его через ⚙.',null,false);return}
@@ -226,12 +193,35 @@ async function generateClip(prompt){
 }
 async function videoFromPhotos(items){if(!items.length)return;const pb=progress('Передаю фото видеомодели');try{if(!pollenKey)throw Error('Нужен личный Pollinations sk_-ключ в ⚙');const model=videoModels.find(x=>/wan|veo|seedance|ltx|kling|video/i.test(x));if(!model)throw Error('Нет доступной видеомодели с поддержкой каталога');const content=[{type:'text',text:'Create a short video using the attached image as the first frame. Preserve the main subject. Add natural motion. '+(input.value||'')}];content.push({type:'image_url',image_url:{url:items[0].data}});const r=await fetch('https://gen.pollinations.ai/v1/chat/completions',{method:'POST',headers:authHeaders(true),body:JSON.stringify({model,messages:[{role:'user',content}]})});if(!r.ok)throw Error('Video model HTTP '+r.status);const j=await r.json(),txt=j.choices?.[0]?.message?.content||'';const match=txt.match(/https?:\/\/[^\s)]+/i);if(match){pb.done();addMessage('ai','Видео готово: '+model,'<video controls playsinline src="'+esc(match[0])+'"></video>',false)}else{pb.done();addMessage('ai',txt||'Модель не вернула ссылку на видео.',null,false)}}catch(e){pb.done();addMessage('ai','Не удалось сделать видео из фото: '+e.message,null,false)}}
 async function send(){const text=input.value.trim(),files=attachments.slice();if(!text&&!files.length)return;input.value='';attachments=[];renderChips();const command=text.match(/^\/(img|image|фото|clip|video|видео|vid|edit|правка)\s*(.*)$/i);if(mode==='edit'||command&&/^(edit|правка)$/i.test(command[1]))return editImage(command?command[2]:text,files.filter(x=>x.type==='image'));if(mode==='img'||command&&/^(img|image|фото)$/i.test(command[1]))return generateImage(command?command[2]:text);if(mode==='clip'||command&&/^(clip|video|видео)$/i.test(command[1]))return generateClip(command?command[2]:text);if(command&&command[1].toLowerCase()==='vid'){const photos=files.filter(x=>x.type==='image');if(photos.length)return videoFromPhotos(photos);if(text.length>4)return generateClip(text.slice(4));addMessage('ai','Прикрепи фото и отправь /vid.',null,false);return}
-const imgs=files.filter(x=>x.type==='image').map(x=>x.data);const vids=files.filter(x=>x.type==='video');let prompt=text||'Проанализируй вложения и опиши их';files.filter(x=>x.type==='text').forEach(x=>prompt+='\n\nФайл '+x.name+':\n'+x.content);vids.forEach(v=>prompt+='\nВидео '+v.name+': проанализируй ключевые кадры по порядку.');if(vids.length)imgs.push(...vids.flatMap(v=>v.frames));addMessage('user',text||'📎 Вложения',esc(text||'Вложения: '+files.map(x=>x.name).join(', '))+(imgs.length?'<div class="small">Изображений/кадров: '+imgs.length+'</div>':''));const pb=progress('Отправляю запрос');const stop=timerProgress(pb);try{const ans=await ask(prompt,imgs);stop();pb.done('Ответ получен');addMessage('ai',ans)}catch(e){stop();pb.done('Ошибка');addMessage('ai','❌ '+e.message,null,false)}}
+const imgs=files.filter(x=>x.type==='image').map(x=>x.data);const vids=files.filter(x=>x.type==='video');let prompt=text||'Проанализируй вложения и опиши их';files.filter(x=>x.type==='text').forEach(x=>prompt+='\n\nФайл '+x.name+':\n'+x.content);vids.forEach(v=>prompt+='\nВидео '+v.name+': ключевые кадры подготовлены, но локальная текстовая модель пока не умеет визуально анализировать их.');files.filter(x=>x.type==='audio').forEach(a=>prompt+='\nАудиофайл '+a.name+': файл прикреплён ('+a.mime+', '+Math.round(a.size/1024)+' КБ), но аудиомодель ещё не подключена — содержимое не распознано.');if(vids.length)imgs.push(...vids.flatMap(v=>v.frames));addMessage('user',text||'📂 Вложения',esc(text||'Вложения: '+files.map(x=>x.name).join(', '))+(imgs.length?'<div class="small">Изображений/кадров: '+imgs.length+'</div>':'')+files.filter(x=>x.type==='audio').map(x=>'<audio controls preload="none" src="'+x.url+'"></audio>').join(''));const pb=progress('Отправляю запрос');const stop=timerProgress(pb);try{const ans=await ask(prompt,imgs);stop();pb.done('Ответ получен');addMessage('ai',ans)}catch(e){stop();pb.done('Ошибка');addMessage('ai','❌ '+e.message,null,false)}}
 $('send').onclick=send;input.addEventListener('input',()=>{input.style.height='42px';input.style.height=Math.min(input.scrollHeight,150)+'px'});input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}});document.querySelectorAll('[data-prompt]').forEach(b=>b.onclick=()=>{input.value=b.dataset.prompt;input.focus();input.dispatchEvent(new Event('input'))});
 $('mic').onclick=()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){alert('Голосовой ввод не поддерживается');return}const r=new SR();r.lang='ru-RU';r.interimResults=false;r.onresult=e=>{input.value=e.results[0][0].transcript;input.focus()};r.onerror=()=>alert('Не удалось распознать речь');r.start()};
 $('clear').onclick=()=>{if(confirm('Начать новый чат? История будет очищена.')){history=[];save();chat.innerHTML='<section class="welcome"><div class="welcome-logo">🕷</div><h2>Новый чат</h2><p>Задай вопрос — локальный ИИ ответит.</p></section>'}};
 if(history.length){chat.innerHTML='';history.forEach(m=>addMessage(m.r,m.t,null,false))}
 if(window.SpiderLocal){$('modelSel').innerHTML='<option>Qwen2.5 0.5B · локально</option>'; $('modelStatus').textContent=window.SpiderLocal.status();}
+
+/* Локальная база знаний Spider AI. Не изменяет веса Qwen; использует поиск фрагментов. */
+const LEARN_DB='spiderai_learning_v1';
+let learnDb=null;
+function openLearnDb(){return new Promise((resolve,reject)=>{const req=indexedDB.open(LEARN_DB,1);req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains('docs'))db.createObjectStore('docs',{keyPath:'id',autoIncrement:true});if(!db.objectStoreNames.contains('examples'))db.createObjectStore('examples',{keyPath:'id',autoIncrement:true})};req.onsuccess=()=>{learnDb=req.result;resolve(learnDb)};req.onerror=()=>reject(req.error)})}
+function storeAll(name){return new Promise((resolve,reject)=>{const tx=learnDb.transaction(name,'readonly'),req=tx.objectStore(name).getAll();req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>reject(req.error)})}
+function storeAdd(name,value){return new Promise((resolve,reject)=>{const tx=learnDb.transaction(name,'readwrite'),req=tx.objectStore(name).add(value);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
+function storeClear(){return new Promise((resolve,reject)=>{const tx=learnDb.transaction(['docs','examples'],'readwrite');tx.objectStore('docs').clear();tx.objectStore('examples').clear();tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)})}
+async function updateLearnStats(){try{const [d,e]=await Promise.all([storeAll('docs'),storeAll('examples')]);$('learnStats').textContent='Материалов: '+d.length+' · примеров: '+e.length+' · хранение: только на этом устройстве'}catch(err){$('learnStats').textContent='База знаний пока недоступна: '+err.message}}
+function openLearn(){ $('learnPanel').classList.add('open');updateLearnStats() }
+$('learnOpen').onclick=openLearn;$('learnClose').onclick=()=>$('learnPanel').classList.remove('open');
+$('learnPanel').addEventListener('click',e=>{if(e.target===$('learnPanel'))$('learnPanel').classList.remove('open')});
+$('learnSaveText').onclick=async()=>{const content=$('learnText').value.trim();if(!content){alert('Сначала добавь текст знаний.');return}if(content.length>200000){alert('Один материал ограничен 200 000 символов.');return}await storeAdd('docs',{title:$('learnTitleInput').value.trim()||'Заметка',content,created:Date.now()});$('learnText').value='';$('learnTitleInput').value='';updateLearnStats();alert('Материал добавлен в базу Spider AI.')};
+$('learnPickFiles').onclick=()=>$('learnFiles').click();
+$('learnFiles').onchange=async()=>{let count=0;for(const file of [...$('learnFiles').files]){if(file.size>2*1024*1024){continue}try{const content=(await file.text()).slice(0,200000);if(content.trim()){await storeAdd('docs',{title:file.name,content,created:Date.now()});count++}}catch(e){}}$('learnFiles').value='';updateLearnStats();alert('Добавлено документов: '+count+'. Поддерживаются текстовые файлы и исходный код.')};
+$('learnSaveExample').onclick=async()=>{const question=$('learnQuestion').value.trim(),answer=$('learnAnswer').value.trim();if(!question||!answer){alert('Заполни вопрос и правильный ответ.');return}await storeAdd('examples',{question,answer,created:Date.now()});$('learnQuestion').value='';$('learnAnswer').value='';updateLearnStats();alert('Пример сохранён. Он будет учитываться в похожих запросах.')};
+$('learnClear').onclick=async()=>{if(confirm('Удалить все материалы и примеры из локальной базы обучения?')){await storeClear();updateLearnStats();alert('Локальная база очищена.')}};
+$('learnExport').onclick=async()=>{const data={version:1,docs:await storeAll('docs'),examples:await storeAll('examples')},url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='spiderai-knowledge.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
+function words(s){return (String(s).toLowerCase().match(/[a-zа-яё0-9_]{3,}/gi)||[]).slice(0,100)}
+function relevance(query,body){const q=new Set(words(query));if(!q.size)return 0;let score=0;for(const w of words(body))if(q.has(w))score++;return score/Math.sqrt(q.size)}
+async function enrichWithKnowledge(query){try{if(!learnDb||!query.trim())return query;const [docs,examples]=await Promise.all([storeAll('docs'),storeAll('examples')]);const ranked=docs.map(x=>({x,score:relevance(query,x.title+' '+x.content)})).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,3);const matched=examples.map(x=>({x,score:relevance(query,x.question)})).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,2);if(!ranked.length&&!matched.length)return query;let context='\n\n[ЛОКАЛЬНАЯ БАЗА ЗНАНИЙ SPIDER AI — используй как справочный контекст; если данных недостаточно, так и скажи.]';ranked.forEach(({x})=>context+='\nМатериал «'+x.title+'»:\n'+x.content.slice(0,3500));matched.forEach(({x})=>context+='\nОбучающий пример. Вопрос: '+x.question+'\nЭталонный ответ: '+x.answer);return query+context.slice(0,11000)}catch(e){console.warn('learning retrieval',e);return query}}
+openLearnDb().then(updateLearnStats).catch(e=>{const el=$('learnStats');if(el)el.textContent='Ошибка локальной базы: '+e.message});
+
 </script>
 </body>
 </html>
