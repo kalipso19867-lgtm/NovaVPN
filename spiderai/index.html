@@ -50,7 +50,7 @@ header h1{font-size:16px;font-weight:650;margin:0;letter-spacing:.1px}
 .tool-btn.active{background:#10a37f20;border-color:#10a37f80;color:#6fe0bd}
 .tool-btn .tool-icon{font-size:15px}
 .tool-btn.soon{opacity:.42}
-.composer-wrap{flex:none;padding:8px 12px calc(10px + var(--safe));background:linear-gradient(180deg,transparent,var(--bg) 20%)}
+.learn-panel{position:fixed;inset:0;z-index:20;background:#000a;display:none;align-items:flex-end;justify-content:center}.learn-panel.open{display:flex}.learn-card{width:min(100%,760px);max-height:88dvh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:20px 20px 0 0;padding:18px 14px calc(18px + var(--safe));box-shadow:0 -12px 45px #0008}.learn-card h2{margin:0 0 6px;font-size:20px}.learn-card p{color:var(--muted);font-size:12px}.learn-card textarea,.learn-card input{width:100%;background:#191919;border:1px solid var(--line);border-radius:11px;padding:10px;margin:5px 0 10px;color:var(--text)}.learn-card textarea{min-height:92px;resize:vertical}.learn-actions{display:flex;gap:8px;flex-wrap:wrap}.learn-actions button{padding:9px 12px;border-radius:10px;background:#10a37f;color:white}.learn-actions .secondary{background:#ffffff14;color:#ddd;border:1px solid var(--line)}.learn-stats{font-size:12px;color:#8ddfc5;margin:8px 0}.learn-note{padding:9px;border-radius:10px;background:#ffffff0b;font-size:11px;color:#bbb}.composer-wrap{flex:none;padding:8px 12px calc(10px + var(--safe));background:linear-gradient(180deg,transparent,var(--bg) 20%)}
 .composer{width:min(100%,820px);margin:0 auto;display:flex;align-items:flex-end;gap:8px;padding:8px;border-radius:24px;background:var(--panel);border:1px solid #555;box-shadow:0 5px 25px #0002}
 .composer:focus-within{border-color:#777;box-shadow:0 0 0 1px #777}
 #prompt{flex:1;min-width:0;max-height:150px;min-height:42px;resize:none;border:0;outline:0;background:transparent;color:var(--text);padding:10px 5px;font:15px/1.45 inherit}
@@ -88,10 +88,37 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 <nav class="tools" aria-label="Инструменты">
  <button class="tool-btn active" data-mode="chat"><span class="tool-icon">✳</span>Чат</button>
  <button class="tool-btn" id="attach"><span class="tool-icon">📂</span>Добавить файлы</button>
+ <button class="tool-btn" id="learnOpen"><span class="tool-icon">🧠</span>Обучение</button>
  <button class="tool-btn" data-mode="img"><span class="tool-icon">▧</span>Создать фото</button>
  <button class="tool-btn" data-mode="clip"><span class="tool-icon">▷</span>Создать видео</button>
  <button class="tool-btn" data-mode="edit"><span class="tool-icon">✧</span>Изменить медиа</button>
 </nav>
+<section class="learn-panel" id="learnPanel" role="dialog" aria-modal="true" aria-labelledby="learnTitle">
+ <div class="learn-card">
+  <h2 id="learnTitle">🧠 Обучение Spider AI</h2>
+  <p>Добавляй материалы и примеры правильных ответов. Spider AI будет находить подходящие фрагменты и подставлять их в контекст диалога.</p>
+  <div class="learn-stats" id="learnStats">Загружаю базу знаний…</div>
+  <label for="learnText">Добавить знания вручную</label>
+  <textarea id="learnText" placeholder="Вставь инструкцию, описание проекта, факты или заметки…"></textarea>
+  <input id="learnTitleInput" placeholder="Название материала (необязательно)">
+  <div class="learn-actions">
+   <button id="learnSaveText">Сохранить знания</button>
+   <button class="secondary" id="learnPickFiles">📂 Загрузить документы</button>
+   <button class="secondary" id="learnExport">Экспорт базы</button>
+  </div>
+  <input id="learnFiles" type="file" hidden multiple accept=".txt,.md,.json,.js,.ts,.py,.html,.css,.csv,.log,.xml,.yml,.yaml,.java,.sql,.kt,.gradle,.properties">
+  <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+  <b>Запомнить правильный ответ</b>
+  <input id="learnQuestion" placeholder="Вопрос или задача">
+  <textarea id="learnAnswer" placeholder="Правильный ответ, которому нужно следовать…"></textarea>
+  <div class="learn-actions">
+   <button id="learnSaveExample">Сохранить пример</button>
+   <button class="secondary" id="learnClose">Закрыть</button>
+   <button class="secondary" id="learnClear">Очистить базу</button>
+  </div>
+  <div class="learn-note">Важно: это локальная база знаний (RAG), а не изменение весов нейросети. Исходная Qwen остаётся прежней. Данные хранятся в памяти приложения на этом устройстве; не загружай пароли, ключи и личные документы.</div>
+ </div>
+</section>
 <div class="composer-wrap">
  <div class="composer"><button class="icon-btn" id="mic" title="Голосовой ввод" aria-label="Голосовой ввод">🎙</button><textarea id="prompt" rows="1" placeholder="Спроси что-нибудь…" autocomplete="off"></textarea><button class="send-btn" id="send" aria-label="Отправить">↑</button></div>
  <div class="composer-hint">Spider AI может ошибаться. Проверяй важную информацию.</div>
@@ -165,7 +192,8 @@ function configurePollinationsKey(){const entered=prompt('Вставь свой 
 $('settings').onclick=()=>{const action=confirm('Spider AI · Настройки\n\nЛокальный чат: '+(window.SpiderLocal?window.SpiderLocal.status():'недоступен')+'\nPollinations: '+(pollenKey?'ключ сохранён на устройстве':'ключ не добавлен')+'\n\nOK — добавить/заменить ключ. Отмена — удалить сохранённый ключ.');if(action)configurePollinationsKey();else if(pollenKey&&confirm('Удалить сохранённый Pollinations ключ с этого устройства?'))configurePollinationsKeyClear()};
 function configurePollinationsKeyClear(){pollenKey='';try{localStorage.removeItem('sp_pollinations_key')}catch(e){}alert('Ключ удалён с этого устройства.')}
 function authHeaders(json=false){const h={};if(json)h['Content-Type']='application/json';if(pollenKey)h.Authorization='Bearer '+pollenKey;return h}
-async function ask(text,images=[]){
+async async function ask(text,images=[]){
+ text=await enrichWithKnowledge(text);
  if(!window.SpiderLocal)throw Error('Локальный движок недоступен. Установи Android APK, а не открывай веб-версию.');
  if(images.length)text+='\\n\\nПримечание: в этой версии локальная модель обрабатывает текст. Вложения пока не передаются в модель.';
  const id='sp-'+Date.now()+'-'+Math.random().toString(36).slice(2);
@@ -232,6 +260,29 @@ $('mic').onclick=()=>{const SR=window.SpeechRecognition||window.webkitSpeechReco
 $('clear').onclick=()=>{if(confirm('Начать новый чат? История будет очищена.')){history=[];save();chat.innerHTML='<section class="welcome"><div class="welcome-logo">🕷</div><h2>Новый чат</h2><p>Задай вопрос — локальный ИИ ответит.</p></section>'}};
 if(history.length){chat.innerHTML='';history.forEach(m=>addMessage(m.r,m.t,null,false))}
 if(window.SpiderLocal){$('modelSel').innerHTML='<option>Qwen2.5 0.5B · локально</option>'; $('modelStatus').textContent=window.SpiderLocal.status();}
+
+/* Локальная база знаний Spider AI. Не изменяет веса Qwen; использует поиск фрагментов. */
+const LEARN_DB='spiderai_learning_v1';
+let learnDb=null;
+function openLearnDb(){return new Promise((resolve,reject)=>{const req=indexedDB.open(LEARN_DB,1);req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains('docs'))db.createObjectStore('docs',{keyPath:'id',autoIncrement:true});if(!db.objectStoreNames.contains('examples'))db.createObjectStore('examples',{keyPath:'id',autoIncrement:true})};req.onsuccess=()=>{learnDb=req.result;resolve(learnDb)};req.onerror=()=>reject(req.error)})}
+function storeAll(name){return new Promise((resolve,reject)=>{const tx=learnDb.transaction(name,'readonly'),req=tx.objectStore(name).getAll();req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>reject(req.error)})}
+function storeAdd(name,value){return new Promise((resolve,reject)=>{const tx=learnDb.transaction(name,'readwrite'),req=tx.objectStore(name).add(value);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
+function storeClear(){return new Promise((resolve,reject)=>{const tx=learnDb.transaction(['docs','examples'],'readwrite');tx.objectStore('docs').clear();tx.objectStore('examples').clear();tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)})}
+async function updateLearnStats(){try{const [d,e]=await Promise.all([storeAll('docs'),storeAll('examples')]);$('learnStats').textContent='Материалов: '+d.length+' · примеров: '+e.length+' · хранение: только на этом устройстве'}catch(err){$('learnStats').textContent='База знаний пока недоступна: '+err.message}}
+function openLearn(){ $('learnPanel').classList.add('open');updateLearnStats() }
+$('learnOpen').onclick=openLearn;$('learnClose').onclick=()=>$('learnPanel').classList.remove('open');
+$('learnPanel').addEventListener('click',e=>{if(e.target===$('learnPanel'))$('learnPanel').classList.remove('open')});
+$('learnSaveText').onclick=async()=>{const content=$('learnText').value.trim();if(!content){alert('Сначала добавь текст знаний.');return}if(content.length>200000){alert('Один материал ограничен 200 000 символов.');return}await storeAdd('docs',{title:$('learnTitleInput').value.trim()||'Заметка',content,created:Date.now()});$('learnText').value='';$('learnTitleInput').value='';updateLearnStats();alert('Материал добавлен в базу Spider AI.')};
+$('learnPickFiles').onclick=()=>$('learnFiles').click();
+$('learnFiles').onchange=async()=>{let count=0;for(const file of [...$('learnFiles').files]){if(file.size>2*1024*1024){continue}try{const content=(await file.text()).slice(0,200000);if(content.trim()){await storeAdd('docs',{title:file.name,content,created:Date.now()});count++}}catch(e){}}$('learnFiles').value='';updateLearnStats();alert('Добавлено документов: '+count+'. Поддерживаются текстовые файлы и исходный код.')};
+$('learnSaveExample').onclick=async()=>{const question=$('learnQuestion').value.trim(),answer=$('learnAnswer').value.trim();if(!question||!answer){alert('Заполни вопрос и правильный ответ.');return}await storeAdd('examples',{question,answer,created:Date.now()});$('learnQuestion').value='';$('learnAnswer').value='';updateLearnStats();alert('Пример сохранён. Он будет учитываться в похожих запросах.')};
+$('learnClear').onclick=async()=>{if(confirm('Удалить все материалы и примеры из локальной базы обучения?')){await storeClear();updateLearnStats();alert('Локальная база очищена.')}};
+$('learnExport').onclick=async()=>{const data={version:1,docs:await storeAll('docs'),examples:await storeAll('examples')},url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='spiderai-knowledge.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
+function words(s){return (String(s).toLowerCase().match(/[a-zа-яё0-9_]{3,}/gi)||[]).slice(0,100)}
+function relevance(query,body){const q=new Set(words(query));if(!q.size)return 0;let score=0;for(const w of words(body))if(q.has(w))score++;return score/Math.sqrt(q.size)}
+async function enrichWithKnowledge(query){try{if(!learnDb||!query.trim())return query;const [docs,examples]=await Promise.all([storeAll('docs'),storeAll('examples')]);const ranked=docs.map(x=>({x,score:relevance(query,x.title+' '+x.content)})).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,3);const matched=examples.map(x=>({x,score:relevance(query,x.question)})).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,2);if(!ranked.length&&!matched.length)return query;let context='\n\n[ЛОКАЛЬНАЯ БАЗА ЗНАНИЙ SPIDER AI — используй как справочный контекст; если данных недостаточно, так и скажи.]';ranked.forEach(({x})=>context+='\nМатериал «'+x.title+'»:\n'+x.content.slice(0,3500));matched.forEach(({x})=>context+='\nОбучающий пример. Вопрос: '+x.question+'\nЭталонный ответ: '+x.answer);return query+context.slice(0,11000)}catch(e){console.warn('learning retrieval',e);return query}}
+openLearnDb().then(updateLearnStats).catch(e=>{const el=$('learnStats');if(el)el.textContent='Ошибка локальной базы: '+e.message});
+
 </script>
 </body>
 </html>
