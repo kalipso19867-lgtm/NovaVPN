@@ -192,7 +192,7 @@ function configurePollinationsKey(){const entered=prompt('Вставь свой 
 $('settings').onclick=()=>{const action=confirm('Spider AI · Настройки\n\nЛокальный чат: '+(window.SpiderLocal?window.SpiderLocal.status():'недоступен')+'\nPollinations: '+(pollenKey?'ключ сохранён на устройстве':'ключ не добавлен')+'\n\nOK — добавить/заменить ключ. Отмена — удалить сохранённый ключ.');if(action)configurePollinationsKey();else if(pollenKey&&confirm('Удалить сохранённый Pollinations ключ с этого устройства?'))configurePollinationsKeyClear()};
 function configurePollinationsKeyClear(){pollenKey='';try{localStorage.removeItem('sp_pollinations_key')}catch(e){}alert('Ключ удалён с этого устройства.')}
 function authHeaders(json=false){const h={};if(json)h['Content-Type']='application/json';if(pollenKey)h.Authorization='Bearer '+pollenKey;return h}
-async async function ask(text,images=[]){
+async function ask(text,images=[]){
  text=await enrichWithKnowledge(text);
  if(!window.SpiderLocal)throw Error('Локальный движок недоступен. Установи Android APK, а не открывай веб-версию.');
  if(images.length)text+='\\n\\nПримечание: в этой версии локальная модель обрабатывает текст. Вложения пока не передаются в модель.';
