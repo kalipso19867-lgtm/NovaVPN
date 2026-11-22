@@ -17,6 +17,7 @@ import androidx.webkit.WebViewClientCompat
 import androidx.lifecycle.lifecycleScope
 import dev.ffmpegkit.llama.Llama
 import dev.ffmpegkit.llama.LlamaConfig
+import dev.ffmpegkit.llama.LlamaModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -25,7 +26,7 @@ import java.io.File
 
 class MainActivity : Activity() {
     private lateinit var webView: WebView
-    private var model: Any? = null
+    private var model: LlamaModel? = null
     private var modelState = "Подготовка локального ИИ…"
     private var downloadId = -1L
     private val handler = Handler(Looper.getMainLooper())
