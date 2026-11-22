@@ -65,7 +65,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 const $=id=>document.getElementById(id), chat=$('chat'), input=$('prompt'), fileInput=$('fileInput');
 const SYSTEM='Ты — Spider AI, универсальный ИИ-помощник. Отвечай на русском, понятно, структурированно и по делу.';
 const FALLBACK_MODELS=['openai/gpt-oss-20b','mistralai/mistral-small-3.2','qwen/qwen3-coder-30b-a3b-instruct','meta/llama-3.3-70b-instruct'];
-let mode='chat', attachments=[], history=[], modelList=FALLBACK_MODELS.slice(), imageModels=[], videoModels=[], pollenKey=localStorage.getItem('sp_pollen_key')||'';
+let mode='chat', attachments=[], history=[], modelList=FALLBACK_MODELS.slice(), imageModels=[], videoModels=[], pollenKey='';
 try{history=JSON.parse(localStorage.getItem('sp_h')||'[]')}catch(e){}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function save(){try{localStorage.setItem('sp_h',JSON.stringify(history.slice(-80)))}catch(e){}}
@@ -104,13 +104,27 @@ async function loadModels(){
  const status=$('modelStatus');if(status)status.textContent='Каталог обновлён: '+modelList.length+' текстовых · '+imageModels.length+' фото · '+videoModels.length+' видео моделей';
 }
 $('modelSel').onchange=()=>localStorage.setItem('sp_model',$('modelSel').value);
-$('settings').onclick=()=>{
- const k=prompt('Вставь свой ключ Pollinations (sk_...). Получить можно на enter.pollinations.ai. Ключ хранится только в локальном хранилище этого устройства. Не отправляй его в чат.',pollenKey);
- if(k===null)return;
- pollenKey=k.trim();
- if(pollenKey)localStorage.setItem('sp_pollen_key',pollenKey);else localStorage.removeItem('sp_pollen_key');
- alert(pollenKey?'Ключ сохранён на этом устройстве. Проверь баланс и разрешённые модели в кабинете Pollinations.':'Ключ удалён.');
-};
+async function connectPollinations(){
+ try{
+  const init=await fetch('https://enter.pollinations.ai/api/device/code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
+  if(!init.ok)throw Error('Не удалось начать авторизацию: HTTP '+init.status);
+  const d=await init.json();
+  const approved=confirm('Подключение Pollinations. Открой страницу авторизации и подтверди доступ.\n\n'+d.verification_uri_complete+'\n\nКод: '+d.user_code+'\n\nПродолжить ожидание после открытия страницы?');
+  if(!approved)return;
+  window.open(d.verification_uri_complete,'_blank');
+  const until=Date.now()+Math.min(1800,d.expires_in||1800)*1000;
+  while(Date.now()<until){
+   await new Promise(r=>setTimeout(r,Math.max(5,d.interval||5)*1000));
+   const token=await fetch('https://enter.pollinations.ai/api/device/token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({device_code:d.device_code})});
+   const j=await token.json();
+   if(token.ok&&j.access_token){pollenKey=j.access_token;alert('Pollinations подключён. Ключ хранится только в памяти приложения до его закрытия.');return}
+   if(j.error==='authorization_pending'||j.error==='slow_down')continue;
+   throw Error(j.error_description||j.error||'Ошибка авторизации');
+  }
+  throw Error('Код авторизации истёк. Нажми ⚙ и попробуй снова.');
+ }catch(e){alert('Не удалось подключить Pollinations: '+e.message)}
+}
+$('settings').onclick=()=>{if(pollenKey){if(confirm('Pollinations уже подключён. Отключить?')){pollenKey='';alert('Отключено.')}return}connectPollinations()};
 function authHeaders(json=false){const h={};if(json)h['Content-Type']='application/json';if(pollenKey)h.Authorization='Bearer '+pollenKey;return h}
 async function ask(text,images=[]){
  if(!pollenKey)throw Error('Для запросов к актуальному API нужен личный ключ Pollinations. Нажми ⚙ и добавь sk_-ключ. Сам каталог моделей доступен без ключа.');
