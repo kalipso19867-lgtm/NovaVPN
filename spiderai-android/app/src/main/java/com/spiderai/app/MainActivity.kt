@@ -17,6 +17,8 @@ import android.webkit.WebView
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewClientCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import dev.ffmpegkit.llama.Llama
 import dev.ffmpegkit.llama.LlamaConfig
 import dev.ffmpegkit.llama.LlamaModel
@@ -72,6 +74,13 @@ class MainActivity : ComponentActivity() {
                 loader.shouldInterceptRequest(request.url)
         }
         setContentView(webView)
+        // Android 15 edge-to-edge: keep WebView content below status/navigation bars.
+        ViewCompat.setOnApplyWindowInsetsListener(webView) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(0, bars.top, 0, bars.bottom)
+            insets
+        }
+        ViewCompat.requestApplyInsets(webView)
         webView.loadUrl("https://appassets.androidplatform.net/assets/www/index.html")
         prepareModel()
     }
