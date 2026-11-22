@@ -124,26 +124,31 @@ async function connectPollinations(){
   throw Error('Код авторизации истёк. Нажми ⚙ и попробуй снова.');
  }catch(e){alert('Не удалось подключить Pollinations: '+e.message)}
 }
-$('settings').onclick=()=>{if(pollenKey){if(confirm('Pollinations уже подключён. Отключить?')){pollenKey='';alert('Отключено.')}return}connectPollinations()};
+$('settings').onclick=()=>alert('Spider AI работает на локальной модели. API-ключи не нужны. Статус: '+(window.SpiderLocal?window.SpiderLocal.status():'открой приложение APK'));
 function authHeaders(json=false){const h={};if(json)h['Content-Type']='application/json';if(pollenKey)h.Authorization='Bearer '+pollenKey;return h}
 async function ask(text,images=[]){
- if(!pollenKey)throw Error('Для запросов к актуальному API нужен личный ключ Pollinations. Нажми ⚙ и добавь sk_-ключ. Сам каталог моделей доступен без ключа.');
- const model=$('modelSel').value||modelList[0];
- const content=[{type:'text',text}];
- images.forEach(url=>content.push({type:'image_url',image_url:{url}}));
- const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),90000);
- try{
-  const r=await fetch('https://gen.pollinations.ai/v1/chat/completions',{method:'POST',headers:authHeaders(true),signal:controller.signal,body:JSON.stringify({model,messages:[{role:'system',content:SYSTEM},{role:'user',content:images.length?content:text}],temperature:.7})});
-  if(!r.ok)throw Error('Pollinations HTTP '+r.status+' — проверь ключ, баланс и доступ модели');
-  const j=await r.json();return j.choices?.[0]?.message?.content||'Модель вернула пустой ответ';
- }finally{clearTimeout(timeout)}
+ if(!window.SpiderLocal)throw Error('Локальный движок недоступен. Установи Android APK, а не открывай веб-версию.');
+ if(images.length)text+='\\n\\nПримечание: в этой версии локальная модель обрабатывает текст. Вложения пока не передаются в модель.';
+ const id='sp-'+Date.now()+'-'+Math.random().toString(36).slice(2);
+ return new Promise((resolve,reject)=>{
+  const timeout=setTimeout(()=>{delete window.__spWaiters[id];reject(Error('Локальная модель не ответила за 3 минуты'))},180000);
+  window.__spWaiters=window.__spWaiters||{};
+  window.__spWaiters[id]={resolve:v=>{clearTimeout(timeout);resolve(v)},reject:e=>{clearTimeout(timeout);reject(e)}};
+  window.SpiderLocal.chat(id,text);
+ });
 }
+window.onSpiderLocalResult=(id,answer,error)=>{
+ const w=window.__spWaiters&&window.__spWaiters[id];if(!w)return;delete window.__spWaiters[id];
+ if(error)w.reject(Error(error));else w.resolve(answer);
+};
+window.onSpiderLocalStatus=(status)=>{const el=$('modelStatus');if(el)el.textContent=status;};
+
 function renderChips(){const w=$('chiprow');w.innerHTML='';attachments.forEach((a,i)=>{const c=document.createElement('span');c.className='chip';c.textContent=(a.type==='image'?'📷 ':a.type==='video'?'🎬 ':'📄 ')+a.name+' ';const b=document.createElement('button');b.textContent='✖';b.onclick=()=>{attachments.splice(i,1);renderChips()};c.append(b);w.append(c)})}
 function readFile(f){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(f)})}
 async function compressImage(file){const data=await readFile(file);return new Promise(resolve=>{const im=new Image();im.onload=()=>{const scale=Math.min(1,1000/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*scale);c.height=Math.round(im.height*scale);c.getContext('2d').drawImage(im,0,0,c.width,c.height);resolve(c.toDataURL('image/jpeg',.82))};im.onerror=()=>resolve(null);im.src=data})}
 async function extractFrames(file,count=4){const u=URL.createObjectURL(file),v=document.createElement('video');v.preload='auto';v.muted=true;v.playsInline=true;return new Promise(resolve=>{v.onerror=()=>{URL.revokeObjectURL(u);resolve([])};v.onloadedmetadata=async()=>{const w=Math.min(640,v.videoWidth||640),h=Math.max(1,Math.round((v.videoHeight||360)*w/(v.videoWidth||640))),c=document.createElement('canvas'),ctx=c.getContext('2d');c.width=w;c.height=h;const out=[];for(let i=0;i<count;i++){const t=Math.min(v.duration*(i+.5)/count,Math.max(0,v.duration-.06));await new Promise(ok=>{let settled=false;const finish=()=>{if(settled)return;settled=true;try{ctx.drawImage(v,0,0,w,h);out.push(c.toDataURL('image/jpeg',.76))}catch(e){}ok()};v.addEventListener('seeked',finish,{once:true});v.currentTime=t;setTimeout(finish,4500)})}URL.revokeObjectURL(u);resolve(out)};v.src=u;v.load()})}
 fileInput.onchange=async()=>{for(const f of [...fileInput.files]){if(f.type.startsWith('image/')){if(f.size>12*1024*1024){alert('Фото должно быть до 12 МБ');continue}const data=await compressImage(f);if(data)attachments.push({type:'image',data,name:f.name})}else if(f.type.startsWith('video/')){const frames=await extractFrames(f,4);if(frames.length)attachments.push({type:'video',frames,name:f.name})}else{try{attachments.push({type:'text',content:(await f.text()).slice(0,20000),name:f.name})}catch(e){}}}fileInput.value='';renderChips()};
-$('attach').onclick=()=>fileInput.click();document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('active',x===b));input.placeholder=mode==='img'?'Опиши изображение…':mode==='clip'?'Опиши короткий видеоклип…':'Напиши сообщение…';if(mode==='file')fileInput.click()});
+$('attach').onclick=()=>fileInput.click();document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{if(b.dataset.mode!=='chat'&&b.dataset.mode!=='file'){alert('В автономной сборке сейчас доступен локальный текстовый ИИ. Генерация фото/видео и правка появятся только после подключения локальных мультимодальных моделей.');return}mode=b.dataset.mode;document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('active',x===b));input.placeholder=mode==='img'?'Опиши изображение…':mode==='clip'?'Опиши короткий видеоклип…':'Напиши сообщение…';if(mode==='file')fileInput.click()});
 async function editImage(prompt,items){
  if(!items.length){addMessage('ai','Прикрепи изображение и напиши, что изменить.',null,false);return}
  if(!pollenKey){addMessage('ai','Для редактирования нужен Pollinations sk_-ключ. Добавь его через ⚙.',null,false);return}
@@ -187,7 +192,7 @@ $('send').onclick=send;input.addEventListener('keydown',e=>{if(e.key==='Enter'){
 $('mic').onclick=()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){alert('Голосовой ввод не поддерживается');return}const r=new SR();r.lang='ru-RU';r.interimResults=false;r.onresult=e=>{input.value=e.results[0][0].transcript;input.focus()};r.onerror=()=>alert('Не удалось распознать речь');r.start()};
 $('clear').onclick=()=>{if(confirm('Очистить историю чата?')){history=[];save();chat.innerHTML='<div class="hint">🕸️ История очищена. Чем займёмся?</div>'}};
 if(history.length){chat.innerHTML='';history.forEach(m=>addMessage(m.r,m.t,null,false))}
-loadModels();
+loadModels();\nif(window.SpiderLocal){$('modelSel').innerHTML='<option>Qwen2.5 0.5B · локально</option>'; $('modelStatus').textContent=window.SpiderLocal.status();}
 </script>
 </body>
 </html>
