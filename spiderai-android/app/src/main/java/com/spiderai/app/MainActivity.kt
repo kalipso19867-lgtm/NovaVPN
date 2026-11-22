@@ -1,6 +1,6 @@
 package com.spiderai.app
 
-import android.app.Activity
+import androidx.activity.ComponentActivity
 import android.app.DownloadManager
 import android.content.Context
 import android.net.Uri
@@ -24,7 +24,7 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.File
 
-class MainActivity : Activity() {
+class MainActivity : ComponentActivity() {
     private lateinit var webView: WebView
     private var model: LlamaModel? = null
     private var modelState = "Подготовка локального ИИ…"
