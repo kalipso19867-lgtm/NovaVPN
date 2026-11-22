@@ -88,9 +88,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 <nav class="tools" aria-label="Инструменты">
  <button class="tool-btn active" data-mode="chat"><span class="tool-icon">✳</span>Чат</button>
  <button class="tool-btn" id="attach"><span class="tool-icon">📎</span>Файлы</button>
- <button class="tool-btn soon" disabled title="Локальная модель для этого инструмента пока не подключена"><span class="tool-icon">▧</span>Фото · скоро</button>
- <button class="tool-btn soon" disabled title="Локальная модель для этого инструмента пока не подключена"><span class="tool-icon">▷</span>Видео · скоро</button>
- <button class="tool-btn soon" disabled title="Локальная модель для этого инструмента пока не подключена"><span class="tool-icon">✧</span>Правка · скоро</button>
+ <button class="tool-btn" data-mode="img"><span class="tool-icon">▧</span>Создать фото</button>
+ <button class="tool-btn" data-mode="clip"><span class="tool-icon">▷</span>Создать видео</button>
+ <button class="tool-btn" data-mode="edit"><span class="tool-icon">✧</span>Изменить медиа</button>
 </nav>
 <div class="composer-wrap">
  <div class="composer"><button class="icon-btn" id="mic" title="Голосовой ввод" aria-label="Голосовой ввод">🎙</button><textarea id="prompt" rows="1" placeholder="Спроси что-нибудь…" autocomplete="off"></textarea><button class="send-btn" id="send" aria-label="Отправить">↑</button></div>
@@ -160,7 +160,7 @@ async function connectPollinations(){
   throw Error('Код авторизации истёк. Нажми ⚙ и попробуй снова.');
  }catch(e){alert('Не удалось подключить Pollinations: '+e.message)}
 }
-$('settings').onclick=()=>alert('Spider AI работает на локальной модели. API-ключи не нужны. Статус: '+(window.SpiderLocal?window.SpiderLocal.status():'открой приложение APK'));
+$('settings').onclick=()=>{const action=confirm('Spider AI объединяет локальный чат и онлайн-инструменты фото/видео.\n\nЛокальный чат: '+(window.SpiderLocal?window.SpiderLocal.status():'недоступен')+'\nPollinations: '+(pollenKey?'подключён':'не подключён')+'\n\nНажми OK, чтобы подключить бесплатный аккаунт Pollinations для генерации/правки медиа.');if(action)connectPollinations()};
 function authHeaders(json=false){const h={};if(json)h['Content-Type']='application/json';if(pollenKey)h.Authorization='Bearer '+pollenKey;return h}
 async function ask(text,images=[]){
  if(!window.SpiderLocal)throw Error('Локальный движок недоступен. Установи Android APK, а не открывай веб-версию.');
@@ -184,7 +184,7 @@ function readFile(f){return new Promise((resolve,reject)=>{const r=new FileReade
 async function compressImage(file){const data=await readFile(file);return new Promise(resolve=>{const im=new Image();im.onload=()=>{const scale=Math.min(1,1000/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*scale);c.height=Math.round(im.height*scale);c.getContext('2d').drawImage(im,0,0,c.width,c.height);resolve(c.toDataURL('image/jpeg',.82))};im.onerror=()=>resolve(null);im.src=data})}
 async function extractFrames(file,count=4){const u=URL.createObjectURL(file),v=document.createElement('video');v.preload='auto';v.muted=true;v.playsInline=true;return new Promise(resolve=>{v.onerror=()=>{URL.revokeObjectURL(u);resolve([])};v.onloadedmetadata=async()=>{const w=Math.min(640,v.videoWidth||640),h=Math.max(1,Math.round((v.videoHeight||360)*w/(v.videoWidth||640))),c=document.createElement('canvas'),ctx=c.getContext('2d');c.width=w;c.height=h;const out=[];for(let i=0;i<count;i++){const t=Math.min(v.duration*(i+.5)/count,Math.max(0,v.duration-.06));await new Promise(ok=>{let settled=false;const finish=()=>{if(settled)return;settled=true;try{ctx.drawImage(v,0,0,w,h);out.push(c.toDataURL('image/jpeg',.76))}catch(e){}ok()};v.addEventListener('seeked',finish,{once:true});v.currentTime=t;setTimeout(finish,4500)})}URL.revokeObjectURL(u);resolve(out)};v.src=u;v.load()})}
 fileInput.onchange=async()=>{for(const f of [...fileInput.files]){if(f.type.startsWith('image/')){if(f.size>12*1024*1024){alert('Фото должно быть до 12 МБ');continue}const data=await compressImage(f);if(data)attachments.push({type:'image',data,name:f.name})}else if(f.type.startsWith('video/')){const frames=await extractFrames(f,4);if(frames.length)attachments.push({type:'video',frames,name:f.name})}else{try{attachments.push({type:'text',content:(await f.text()).slice(0,20000),name:f.name})}catch(e){}}}fileInput.value='';renderChips()};
-$('attach').onclick=()=>fileInput.click();$('attach').onclick=()=>fileInput.click();document.querySelectorAll('.tool-btn[data-mode]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tool-btn').forEach(x=>x.classList.toggle('active',x===b));mode='chat';input.focus()});
+$('attach').onclick=()=>fileInput.click();$('attach').onclick=()=>fileInput.click();document.querySelectorAll('.tool-btn[data-mode]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tool-btn[data-mode]').forEach(x=>x.classList.toggle('active',x===b));mode=b.dataset.mode;input.placeholder=mode==='img'?'Опиши изображение, которое нужно создать…':mode==='clip'?'Опиши видео, которое нужно создать…':mode==='edit'?'Прикрепи фото/видео и опиши изменения…':'Спроси что-нибудь…';input.focus()});
 async function editImage(prompt,items){
  if(!items.length){addMessage('ai','Прикрепи изображение и напиши, что изменить.',null,false);return}
  if(!pollenKey){addMessage('ai','Для редактирования нужен Pollinations sk_-ключ. Добавь его через ⚙.',null,false);return}
