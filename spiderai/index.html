@@ -54,6 +54,53 @@ header h1{letter-spacing:.7px;text-shadow:0 0 14px #00bfff40}
 .composer-hint{color:#6689a4}.track{background:#16334b}.fill{background:linear-gradient(90deg,#00c8ff,#347dff)}
 a{color:#55dcff}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #00c8ff}
+
+/* Spider AI — согласованный тёмный минималистичный интерфейс */
+:root{color-scheme:dark;--bg:#212121;--surface:#2f2f2f;--surface2:#383838;--line:#414141;--text:#ececec;--muted:#a1a1aa;--accent:#10a37f;--accent2:#19c79a;--safe:env(safe-area-inset-bottom,0px)}
+body{background:var(--bg);color:var(--text)}
+header{background:#212121;border-bottom:1px solid #343434;box-shadow:none;padding:0 16px}
+.logo,.welcome-logo{background:#343434;color:#f5f5f5;box-shadow:none}
+.logo{border:1px solid #4a4a4a}
+header h1{font-size:18px;font-weight:650;letter-spacing:-.3px}
+.icon-btn{color:#d4d4d8}
+#modelSel{background:#2f2f2f;color:#d4d4d8;border:1px solid #494949}
+#chat{padding:22px 16px 26px}
+.welcome{max-width:760px;padding:26px 8px}
+.welcome-logo{width:58px;height:58px;border-radius:18px;margin-bottom:22px;font-size:28px;border:1px solid #4a4a4a}
+.welcome h2{font-size:clamp(25px,6vw,32px);font-weight:650;letter-spacing:-.8px}
+.welcome p{color:#a1a1aa;font-size:15px}
+.suggestions{max-width:660px;gap:10px;margin-top:26px}
+.suggestion{background:#2b2b2b;border:1px solid #414141;border-radius:16px;box-shadow:none;color:#ececec;min-height:82px}
+.suggestion b{color:#ececec;font-weight:600}
+.suggestion span{color:#a1a1aa}
+.msg{background:#2f2f2f;border:1px solid #414141;box-shadow:none;color:#ececec}
+.user{background:#343434;border-color:#454545;color:#f1f1f1}
+.ai{background:transparent;border-color:transparent}
+.msg pre{background:#181818}
+.actions button{background:#303030;color:#d4d4d8;border-color:#484848}
+#modelStatus{color:#a1a1aa}
+.chip{background:#303030;border-color:#484848;color:#d4d4d8}
+.tools{background:#212121;border-top:1px solid #343434;padding:10px 12px 7px}
+.tool-btn{background:#2b2b2b;border:1px solid #414141;color:#c4c4c9;border-radius:13px}
+.tool-btn.active{background:#153b32;border-color:#26765f;color:#72d9b5}
+.composer-wrap{background:linear-gradient(180deg,#21212100,#212121 18%);padding:8px 12px calc(12px + var(--safe))}
+.composer{background:#2f2f2f;border:1px solid #494949;box-shadow:none;border-radius:26px}
+.composer:focus-within{border-color:#666;box-shadow:0 0 0 2px #ffffff0a}
+#prompt{color:#ececec}
+#prompt::placeholder{color:#a1a1aa}
+.send-btn{background:#f4f4f4;color:#202020;border-radius:50%;font-size:21px}
+.composer-hint{color:#8b8b93}
+.learn-card{background:#2b2b2b;border-color:#454545;color:#ececec}
+.learn-card p,.learn-note{color:#a1a1aa}
+.learn-card textarea,.learn-card input{background:#202020;border-color:#484848;color:#ececec}
+.learn-actions button{background:#10a37f;color:#fff}
+.learn-actions .secondary{background:#383838;color:#e4e4e7;border-color:#4a4a4a}
+.learn-note{background:#383838}
+.learn-stats{color:#72d9b5}
+a{color:#72d9b5}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #10a37f;outline-offset:2px}
+@media(max-width:420px){header{padding:0 10px;gap:6px}#modelSel{max-width:112px;font-size:10px}.header-actions{gap:0}.icon-btn{width:36px}.welcome{padding:16px 4px}.suggestions{gap:8px}.suggestion{padding:12px;min-height:78px}.tools{gap:7px}.tool-btn{padding:8px 11px}}
+
 </style>
 </head>
 <body><header><div class="brand"><div class="logo">🕷</div><h1>Spider AI</h1></div><select id="modelSel" aria-label="Локальная модель"><option>Qwen2.5 0.5B · локально</option></select><div class="header-actions"><button class="icon-btn" id="settings" title="Настройки">⚙</button><button class="icon-btn" id="clear" title="Новый чат">＋</button></div></header>
