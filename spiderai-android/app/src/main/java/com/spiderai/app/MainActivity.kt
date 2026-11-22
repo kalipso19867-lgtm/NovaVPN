@@ -55,10 +55,10 @@ class MainActivity : ComponentActivity() {
                     val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
                         addCategory(Intent.CATEGORY_OPENABLE)
                         type = "*/*"
-                        putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/*", "video/*", "text/*", "application/*"))
+                        putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/*", "video/*", "audio/*", "text/*", "application/*"))
                         putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
                     }
-                    startActivityForResult(Intent.createChooser(intent, "Выбрать фото, видео или файл"), fileChooserRequest)
+                    startActivityForResult(Intent.createChooser(intent, "Выбрать фото, видео, аудио или файл"), fileChooserRequest)
                     true
                 } catch (e: Exception) {
                     fileChooserCallback = null
