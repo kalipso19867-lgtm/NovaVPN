@@ -40,8 +40,8 @@ a{color:#8de8ff}
 <script>
 const $=id=>document.getElementById(id), chat=$('chat'), input=$('prompt'), fileInput=$('fileInput');
 const SYSTEM='Ты — Spider AI, универсальный ИИ-помощник. Отвечай на русском, понятно, структурированно и по делу.';
-const FALLBACK_MODELS=['openai-fast','openai','mistral','deepseek','qwen','gemini'];
-let mode='chat', attachments=[], history=[], modelList=FALLBACK_MODELS.slice(), apiKey=localStorage.getItem('spider_gkey')||'';
+const FALLBACK_MODELS=['openai-fast','openai','openai-large','mistral','mistral-large','deepseek','qwen','llama','phi','searchgpt'];
+let mode='chat', attachments=[], history=[], modelList=FALLBACK_MODELS.slice();
 try{history=JSON.parse(localStorage.getItem('sp_h')||'[]')}catch(e){}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function save(){try{localStorage.setItem('sp_h',JSON.stringify(history.slice(-80)))}catch(e){}}
@@ -63,13 +63,41 @@ function addMessage(role,text,html,saveIt=true){
 function copyText(t,b){const fallback=()=>{const x=document.createElement('textarea');x.value=t;document.body.append(x);x.select();document.execCommand('copy');x.remove()};(navigator.clipboard?.writeText(t)||Promise.reject()).then(()=>{}).catch(fallback);b.textContent='✅ Скопировано';setTimeout(()=>b.textContent='📋 Копировать',1400)}
 function speak(t){if(!('speechSynthesis'in window))return; speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/[`*_#]/g,''));u.lang='ru-RU';speechSynthesis.speak(u)}
 function download(url,name){const a=document.createElement('a');a.href=url;a.download=name;a.click()}
-function progress(label){const d=document.createElement('div');d.className='msg ai';d.innerHTML='<div class="progress"><div class="progress-label"><span></span><b>0%</b></div><div class="track"><div class="fill"></div></div></div>';chat.append(d);chat.scrollTop=chat.scrollHeight;const l=d.querySelector('span'),p=d.querySelector('b'),f=d.querySelector('.fill');return{el:d,set(n,s){n=Math.max(0,Math.min(100,Math.round(n)));f.style.width=n+'%';p.textContent=n+'%';l.textContent=s||label;chat.scrollTop=chat.scrollHeight},done(s){this.set(100,s||'Готово')}}}
+function progress(label){const d=document.createElement('div');d.className='msg ai';d.innerHTML='<div class="progress"><div class="progress-label"><span></span><b>0%</b></div><div class="track"><div class="fill"></div></div></div>';chat.append(d);chat.scrollTop=chat.scrollHeight;const l=d.querySelector('span'),p=d.querySelector('b'),f=d.querySelector('.fill');return{el:d,set(n,s){n=Math.max(0,Math.min(99,Math.round(n)));f.style.width=n+'%';p.textContent=n+'%';l.textContent=s||label;chat.scrollTop=chat.scrollHeight},done(){d.remove()}}}
 function timerProgress(pb){let n=2;const id=setInterval(()=>{n=Math.min(90,n+1+Math.random()*3);pb.set(n,'🕷️ Получаю ответ…')},650);return()=>clearInterval(id)}
-async function loadModels(){try{const r=await fetch('https://text.pollinations.ai/models');if(!r.ok)throw Error();const data=await r.json();const found=data.map(x=>typeof x==='string'?x:x.name).filter(Boolean);if(found.length)modelList=found.slice(0,40)}catch(e){}const sel=$('modelSel');sel.innerHTML='';modelList.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.append(o)});const saved=localStorage.getItem('sp_model');if(saved&&modelList.includes(saved))sel.value=saved}
+async function loadModels(){modelList=FALLBACK_MODELS.slice();const sel=$('modelSel');sel.innerHTML='';modelList.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.append(o)});const saved=localStorage.getItem('sp_model');if(saved&&modelList.includes(saved))sel.value=saved}
 $('modelSel').onchange=()=>localStorage.setItem('sp_model',$('modelSel').value);
-$('settings').onclick=()=>{const k=prompt('Необязательный Gemini API key. Можно оставить пустым — тогда используются доступные модели Pollinations.',apiKey);if(k===null)return;apiKey=k.trim();if(apiKey)localStorage.setItem('spider_gkey',apiKey);else localStorage.removeItem('spider_gkey');alert(apiKey?'Ключ сохранён на этом устройстве.':'Ключ удалён.')};
-async function askGemini(text,images){const parts=[{text}];for(const data of images)parts.push({inline_data:{mime_type:'image/jpeg',data:data.split(',')[1]}});const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+encodeURIComponent(apiKey),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system_instruction:{parts:[{text:SYSTEM}]},contents:[{role:'user',parts}]})});if(!r.ok)throw Error('Gemini HTTP '+r.status);const j=await r.json();return(j.candidates?.[0]?.content?.parts||[]).map(x=>x.text||'').join('')||'Пустой ответ'}
-async function ask(text,images=[]){if(apiKey){try{return await askGemini(text,images)}catch(e){console.warn('Gemini fallback',e)}}const chosen=$('modelSel').value;const chain=[chosen,...modelList.filter(x=>x!==chosen),...FALLBACK_MODELS.filter(x=>x!==chosen&&!modelList.includes(x))];let last='нет ответа';for(const m of chain){try{const c=new AbortController(),to=setTimeout(()=>c.abort(),50000);let r;if(images.length){const content=[{type:'text',text}];images.forEach(url=>content.push({type:'image_url',image_url:{url}}));r=await fetch('https://text.pollinations.ai/?model='+encodeURIComponent(m),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:m,messages:[{role:'system',content:SYSTEM},{role:'user',content}]}),signal:c.signal})}else{r=await fetch('https://text.pollinations.ai/'+encodeURIComponent(text)+'?model='+encodeURIComponent(m)+'&seed='+Math.floor(Math.random()*1e6),{signal:c.signal})}clearTimeout(to);if(r.ok){const t=await r.text();if(t.trim()&&!t.trim().startsWith('<'))return t}last=m+' HTTP '+r.status}catch(e){last=m+' '+e.message}}throw Error('Модели временно недоступны ('+last+'). Попробуй позже.')}
+$('settings').onclick=()=>alert('Spider AI использует модели Pollinations без ввода API-ключа. Доступность и бесплатные лимиты зависят от сервиса.');
+async function ask(text,images=[]){
+ const chosen=$('modelSel').value||FALLBACK_MODELS[0];
+ const chain=[chosen,...FALLBACK_MODELS.filter(x=>x!==chosen)];
+ let last='нет ответа';
+ for(const m of chain){
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),50000);
+  try{
+   let response;
+   if(images.length){
+    const content=[{type:'text',text}];
+    images.forEach(url=>content.push({type:'image_url',image_url:{url}}));
+    response=await fetch('https://text.pollinations.ai/?model='+encodeURIComponent(m),{
+     method:'POST',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({model:m,messages:[{role:'system',content:SYSTEM},{role:'user',content}]}),
+     signal:controller.signal
+    });
+   }else{
+    const params=new URLSearchParams({model:m,seed:String(Math.floor(Math.random()*1e6))});
+    response=await fetch('https://text.pollinations.ai/'+encodeURIComponent(text)+'?'+params.toString(),{signal:controller.signal});
+   }
+   if(response.ok){
+    const answer=await response.text();
+    if(answer.trim()&&!answer.trim().startsWith('<'))return answer;
+    last=m+' вернул пустой ответ';
+   }else last=m+' HTTP '+response.status;
+  }catch(e){last=m+' '+(e.name==='AbortError'?'тайм-аут':e.message)}
+  finally{clearTimeout(timeout)}
+ }
+ throw Error('Доступные модели сейчас не ответили ('+last+'). Попробуй ещё раз позже.');
+}
 function renderChips(){const w=$('chiprow');w.innerHTML='';attachments.forEach((a,i)=>{const c=document.createElement('span');c.className='chip';c.textContent=(a.type==='image'?'📷 ':a.type==='video'?'🎬 ':'📄 ')+a.name+' ';const b=document.createElement('button');b.textContent='✖';b.onclick=()=>{attachments.splice(i,1);renderChips()};c.append(b);w.append(c)})}
 function readFile(f){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(f)})}
 async function compressImage(file){const data=await readFile(file);return new Promise(resolve=>{const im=new Image();im.onload=()=>{const scale=Math.min(1,1000/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*scale);c.height=Math.round(im.height*scale);c.getContext('2d').drawImage(im,0,0,c.width,c.height);resolve(c.toDataURL('image/jpeg',.82))};im.onerror=()=>resolve(null);im.src=data})}
