@@ -38,7 +38,7 @@ header button,header select,.composer button,.mode{min-height:44px}
 header select{max-width:36vw;min-width:0;font-size:12px;padding:7px 6px}
 #chat{padding:clamp(8px,2.5vw,16px);overscroll-behavior:contain}
 .msg{max-width:min(94%,760px);font-size:15px}
-.modes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;padding:6px 8px}
+.modes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;padding:6px 8px}
 .mode{font-size:clamp(11px,2.8vw,13px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .composer{gap:6px;padding:8px;padding-bottom:calc(8px + var(--safe-bottom))}
 .composer button{width:44px;min-width:44px;padding:0;font-size:17px;display:grid;place-items:center}
@@ -56,8 +56,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 <body>
 <header><h1>🕷️ Spider AI</h1><select id="modelSel" aria-label="Модель"><option>Загрузка…</option></select><button id="settings" title="Настройки">⚙</button><button id="clear" title="Очистить">🗑</button></header>
 <main id="chat"><div class="hint"><div style="font-size:48px">🕸️</div><b>Spider AI</b><br>Чат · анализ фото и видео · генерация изображений · видеофайл WebM<br><span class="small">/img описание · /clip описание · /vid из прикреплённых фото</span></div></main>
+<div id="modelStatus" class="small" style="padding:2px 10px;text-align:center"></div>
 <div id="chiprow"></div>
-<nav class="modes"><button class="mode active" data-mode="chat">💬 Чат</button><button class="mode" data-mode="img">🖼️ Фото</button><button class="mode" data-mode="clip">🎬 Видео</button><button class="mode" data-mode="file">📎 Файл</button></nav>
+<nav class="modes"><button class="mode active" data-mode="chat">💬 Чат</button><button class="mode" data-mode="img">🖼️ Фото</button><button class="mode" data-mode="clip">🎬 Видео</button><button class="mode" data-mode="edit">🪄 Правка</button><button class="mode" data-mode="file">📎 Файл</button></nav>
 <div class="composer"><button id="attach" title="Прикрепить">📎</button><button id="mic" title="Голосовой ввод">🎤</button><input id="prompt" placeholder="Напиши сообщение…" autocomplete="off"><button id="send">➤</button></div>
 <input id="fileInput" type="file" multiple accept="image/*,video/*,.txt,.md,.json,.js,.ts,.py,.html,.css,.csv,.log,.xml,.yml,.yaml,.java,.sql">
 <script>
@@ -90,6 +91,7 @@ function progress(label){const d=document.createElement('div');d.className='msg 
 function timerProgress(pb){let n=2;const id=setInterval(()=>{n=Math.min(90,n+1+Math.random()*3);pb.set(n,'🕷️ Получаю ответ…')},650);return()=>clearInterval(id)}
 async function catalog(path){try{const r=await fetch('https://gen.pollinations.ai'+path);if(!r.ok)throw Error('HTTP '+r.status);const j=await r.json();return Array.isArray(j)?j:(j.data||j.models||[])}catch(e){console.warn('catalog',path,e);return[]}}
 function modelId(x){return x.id||x.name||x.model||''}
+function supports(x,term){return JSON.stringify(x.supported_endpoints||x.endpoints||[]).toLowerCase().includes(term)||JSON.stringify(x.capabilities||[]).toLowerCase().includes(term)}
 async function loadModels(){
  const [texts,imgs,vids]=await Promise.all([catalog('/text/models'),catalog('/image/models'),catalog('/video/models')]);
  const usable=texts.filter(x=>modelId(x)).map(modelId);
@@ -99,6 +101,7 @@ async function loadModels(){
  const sel=$('modelSel');sel.innerHTML='';
  modelList.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.append(o)});
  const saved=localStorage.getItem('sp_model');if(saved&&modelList.includes(saved))sel.value=saved;
+ const status=$('modelStatus');if(status)status.textContent='Каталог обновлён: '+modelList.length+' текстовых · '+imageModels.length+' фото · '+videoModels.length+' видео моделей';
 }
 $('modelSel').onchange=()=>localStorage.setItem('sp_model',$('modelSel').value);
 $('settings').onclick=()=>{
@@ -127,6 +130,22 @@ async function compressImage(file){const data=await readFile(file);return new Pr
 async function extractFrames(file,count=4){const u=URL.createObjectURL(file),v=document.createElement('video');v.preload='auto';v.muted=true;v.playsInline=true;return new Promise(resolve=>{v.onerror=()=>{URL.revokeObjectURL(u);resolve([])};v.onloadedmetadata=async()=>{const w=Math.min(640,v.videoWidth||640),h=Math.max(1,Math.round((v.videoHeight||360)*w/(v.videoWidth||640))),c=document.createElement('canvas'),ctx=c.getContext('2d');c.width=w;c.height=h;const out=[];for(let i=0;i<count;i++){const t=Math.min(v.duration*(i+.5)/count,Math.max(0,v.duration-.06));await new Promise(ok=>{let settled=false;const finish=()=>{if(settled)return;settled=true;try{ctx.drawImage(v,0,0,w,h);out.push(c.toDataURL('image/jpeg',.76))}catch(e){}ok()};v.addEventListener('seeked',finish,{once:true});v.currentTime=t;setTimeout(finish,4500)})}URL.revokeObjectURL(u);resolve(out)};v.src=u;v.load()})}
 fileInput.onchange=async()=>{for(const f of [...fileInput.files]){if(f.type.startsWith('image/')){if(f.size>12*1024*1024){alert('Фото должно быть до 12 МБ');continue}const data=await compressImage(f);if(data)attachments.push({type:'image',data,name:f.name})}else if(f.type.startsWith('video/')){const frames=await extractFrames(f,4);if(frames.length)attachments.push({type:'video',frames,name:f.name})}else{try{attachments.push({type:'text',content:(await f.text()).slice(0,20000),name:f.name})}catch(e){}}}fileInput.value='';renderChips()};
 $('attach').onclick=()=>fileInput.click();document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('active',x===b));input.placeholder=mode==='img'?'Опиши изображение…':mode==='clip'?'Опиши короткий видеоклип…':'Напиши сообщение…';if(mode==='file')fileInput.click()});
+async function editImage(prompt,items){
+ if(!items.length){addMessage('ai','Прикрепи изображение и напиши, что изменить.',null,false);return}
+ if(!pollenKey){addMessage('ai','Для редактирования нужен Pollinations sk_-ключ. Добавь его через ⚙.',null,false);return}
+ const pb=progress('Редактирую изображение');
+ try{
+  const model=imageModels[0];if(!model)throw Error('Нет image-моделей в каталоге');
+  const blob=await (await fetch(items[0].data)).blob(),form=new FormData();
+  form.append('model',model);form.append('prompt',prompt||'Improve this image while preserving the subject');form.append('image',blob,'source.jpg');
+  const r=await fetch('https://gen.pollinations.ai/v1/images/edits',{method:'POST',headers:authHeaders(),body:form});
+  if(!r.ok)throw Error('Image edit API HTTP '+r.status);
+  const j=await r.json(),item=j.data?.[0];let src=item?.url;
+  if(!src&&item?.b64_json)src='data:image/png;base64,'+item.b64_json;
+  if(!src)throw Error('Модель не вернула готовое изображение');
+  pb.done();addMessage('ai','Изображение отредактировано ('+model+').','<img src="'+src+'" alt="Отредактированное фото">',false);
+ }catch(e){pb.done();addMessage('ai','Не удалось отредактировать фото: '+e.message,null,false)}
+}
 function imageURL(prompt,w=1024,h=1024){return 'https://gen.pollinations.ai/image/'+encodeURIComponent(prompt)+'?model=' + encodeURIComponent(imageModels[0]||'black-forest-labs/flux.1-schnell')+'&width='+w+'&height='+h+'&seed='+Math.floor(Math.random()*1e6)}
 async function fetchImage(url,pb,base,span,label){if(!pollenKey)throw Error('Для генерации нужен личный Pollinations sk_-ключ: ⚙ Настройки');const r=await fetch(url,{headers:authHeaders()});if(!r.ok)throw Error('HTTP '+r.status);const total=+r.headers.get('content-length')||0,reader=r.body.getReader(),chunks=[];let got=0;while(true){const x=await reader.read();if(x.done)break;chunks.push(x.value);got+=x.value.length;pb.set(total?base+span*got/total:Math.min(base+span-2,base+span*got/60000),label)}const all=new Uint8Array(got);let off=0;chunks.forEach(c=>{all.set(c,off);off+=c.length});return URL.createObjectURL(new Blob([all],{type:r.headers.get('content-type')||'image/jpeg'}))}
 async function generateImage(prompt){if(!prompt)return;addMessage('user','🖼️ '+prompt);const pb=progress('Генерирую изображение');try{let w=1024,h=1024;if(/вертикал|портрет|9:16/i.test(prompt)){w=832;h=1216}else if(/горизонт|широк|16:9/i.test(prompt)){w=1216;h=832}const url=await fetchImage(imageURL(prompt,w,h),pb,0,96,'🖼️ Генерирую и загружаю…');pb.done('Фото готово');const html='<img src="'+url+'" alt="Созданное изображение">';addMessage('ai','Изображение готово: '+prompt,html,false)}catch(e){pb.done('Ошибка');addMessage('ai','Не удалось создать фото: '+e.message,null,false)}}
@@ -136,20 +155,19 @@ function drawCover(ctx,img,progress,reverse){const scale=Math.max(VW/img.width,V
 async function buildWebM(images,pb){if(!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream)throw Error('Запись видео WebM не поддерживается этим браузером');const c=document.createElement('canvas');c.width=VW;c.height=VH;const ctx=c.getContext('2d'),stream=c.captureStream(30),mime=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(x=>MediaRecorder.isTypeSupported(x));const rec=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:2500000}:{}),chunks=[];rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};const stopped=new Promise((resolve,reject)=>{rec.onstop=resolve;rec.onerror=()=>reject(Error('Ошибка записи видео'))});rec.start();const total=images.length*FRAME_SECONDS,start=performance.now();await new Promise(resolve=>{function frame(now){const elapsed=Math.min(total,(now-start)/1000),idx=Math.min(images.length-1,Math.floor(elapsed/FRAME_SECONDS)),local=elapsed-idx*FRAME_SECONDS;ctx.fillStyle='#000';ctx.fillRect(0,0,VW,VH);drawCover(ctx,images[idx],local/FRAME_SECONDS,idx%2===1);if(local>FRAME_SECONDS-FADE&&idx<images.length-1){const p=(local-(FRAME_SECONDS-FADE))/FADE;ctx.globalAlpha=p;drawCover(ctx,images[idx+1],p,idx%2===0);ctx.globalAlpha=1}pb.set(80+19*elapsed/total,'🎞️ Собираю видеофайл…');if(elapsed>=total)resolve();else requestAnimationFrame(frame)}requestAnimationFrame(frame)});rec.stop();stream.getTracks().forEach(t=>t.stop());await stopped;return URL.createObjectURL(new Blob(chunks,{type:rec.mimeType||'video/webm'}))}
 async function generateClip(prompt){
  if(!prompt)return;addMessage('user','🎬 '+prompt);
- if(!pollenKey){addMessage('ai','Для настоящей AI-генерации видео нужен личный Pollinations sk_-ключ. Добавь его через ⚙. Без этого приложение не будет притворяться, что создаёт AI-видео.',null,false);return}
- if(!videoModels.length){addMessage('ai','В текущем каталоге не обнаружена видеомодель. Обнови каталог позже.',null,false);return}
- const pb=progress('Генерирую видео');
+ if(!pollenKey){addMessage('ai','Для настоящей AI-генерации видео требуется авторизация Pollinations через ⚙. Бесплатные модели и платные модели показываются отдельно в каталоге.',null,false);return}
+ if(!videoModels.length){addMessage('ai','В живом каталоге сейчас нет доступной видеомодели.',null,false);return}
+ const pb=progress('Генерирую AI-видео');
  try{
-  const model=videoModels.find(x=>/wan|veo|seedance|ltx|kling|video/i.test(x))||videoModels[0];
-  const url='https://gen.pollinations.ai/video/'+encodeURIComponent(prompt)+'?model='+encodeURIComponent(model)+'&duration=5';
+  const model=videoModels[0],url='https://gen.pollinations.ai/video/'+encodeURIComponent(prompt)+'?model='+encodeURIComponent(model)+'&duration=5';
   const r=await fetch(url,{headers:authHeaders()});if(!r.ok)throw Error('Видео API HTTP '+r.status);
-  const blob=await r.blob();if(!blob.type.includes('video')&&blob.size<1000)throw Error('Сервис вернул не видеофайл');
+  const blob=await r.blob();if(!blob.type.startsWith('video/'))throw Error('Сервис вернул '+(blob.type||'неизвестный формат')+', а не видео');
   const src=URL.createObjectURL(blob);pb.done();
-  addMessage('ai','Готово: AI-видео ('+model+').','<video controls playsinline src="'+src+'"></video><div class="small">Настоящий видеофайл от видеомодели</div>',false);
+  addMessage('ai','Готово: AI-видео ('+model+').','<video controls playsinline src="'+src+'"></video><div class="small">MP4 · модель из актуального каталога</div>',false);
  }catch(e){pb.done();addMessage('ai','Не удалось создать видео: '+e.message,null,false)}
 }
 async function videoFromPhotos(items){if(!items.length)return;const pb=progress('Передаю фото видеомодели');try{if(!pollenKey)throw Error('Нужен личный Pollinations sk_-ключ в ⚙');const model=videoModels.find(x=>/wan|veo|seedance|ltx|kling|video/i.test(x));if(!model)throw Error('Нет доступной видеомодели с поддержкой каталога');const content=[{type:'text',text:'Create a short video using the attached image as the first frame. Preserve the main subject. Add natural motion. '+(input.value||'')}];content.push({type:'image_url',image_url:{url:items[0].data}});const r=await fetch('https://gen.pollinations.ai/v1/chat/completions',{method:'POST',headers:authHeaders(true),body:JSON.stringify({model,messages:[{role:'user',content}]})});if(!r.ok)throw Error('Video model HTTP '+r.status);const j=await r.json(),txt=j.choices?.[0]?.message?.content||'';const match=txt.match(/https?:\/\/[^\s)]+/i);if(match){pb.done();addMessage('ai','Видео готово: '+model,'<video controls playsinline src="'+esc(match[0])+'"></video>',false)}else{pb.done();addMessage('ai',txt||'Модель не вернула ссылку на видео.',null,false)}}catch(e){pb.done();addMessage('ai','Не удалось сделать видео из фото: '+e.message,null,false)}}
-async function send(){const text=input.value.trim(),files=attachments.slice();if(!text&&!files.length)return;input.value='';attachments=[];renderChips();const command=text.match(/^\/(img|image|фото|clip|video|видео|vid)\s*(.*)$/i);if(mode==='img'||command&&/^(img|image|фото)$/i.test(command[1]))return generateImage(command?command[2]:text);if(mode==='clip'||command&&/^(clip|video|видео)$/i.test(command[1]))return generateClip(command?command[2]:text);if(command&&command[1].toLowerCase()==='vid'){const photos=files.filter(x=>x.type==='image');if(photos.length)return videoFromPhotos(photos);if(text.length>4)return generateClip(text.slice(4));addMessage('ai','Прикрепи фото и отправь /vid.',null,false);return}
+async function send(){const text=input.value.trim(),files=attachments.slice();if(!text&&!files.length)return;input.value='';attachments=[];renderChips();const command=text.match(/^\/(img|image|фото|clip|video|видео|vid|edit|правка)\s*(.*)$/i);if(mode==='edit'||command&&/^(edit|правка)$/i.test(command[1]))return editImage(command?command[2]:text,files.filter(x=>x.type==='image'));if(mode==='img'||command&&/^(img|image|фото)$/i.test(command[1]))return generateImage(command?command[2]:text);if(mode==='clip'||command&&/^(clip|video|видео)$/i.test(command[1]))return generateClip(command?command[2]:text);if(command&&command[1].toLowerCase()==='vid'){const photos=files.filter(x=>x.type==='image');if(photos.length)return videoFromPhotos(photos);if(text.length>4)return generateClip(text.slice(4));addMessage('ai','Прикрепи фото и отправь /vid.',null,false);return}
 const imgs=files.filter(x=>x.type==='image').map(x=>x.data);const vids=files.filter(x=>x.type==='video');let prompt=text||'Проанализируй вложения и опиши их';files.filter(x=>x.type==='text').forEach(x=>prompt+='\n\nФайл '+x.name+':\n'+x.content);vids.forEach(v=>prompt+='\nВидео '+v.name+': проанализируй ключевые кадры по порядку.');if(vids.length)imgs.push(...vids.flatMap(v=>v.frames));addMessage('user',text||'📎 Вложения',esc(text||'Вложения: '+files.map(x=>x.name).join(', '))+(imgs.length?'<div class="small">Изображений/кадров: '+imgs.length+'</div>':''));const pb=progress('Отправляю запрос');const stop=timerProgress(pb);try{const ans=await ask(prompt,imgs);stop();pb.done('Ответ получен');addMessage('ai',ans)}catch(e){stop();pb.done('Ошибка');addMessage('ai','❌ '+e.message,null,false)}}
 $('send').onclick=send;input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();send()}});
 $('mic').onclick=()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){alert('Голосовой ввод не поддерживается');return}const r=new SR();r.lang='ru-RU';r.interimResults=false;r.onresult=e=>{input.value=e.results[0][0].transcript;input.focus()};r.onerror=()=>alert('Не удалось распознать речь');r.start()};
