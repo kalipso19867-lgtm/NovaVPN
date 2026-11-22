@@ -7,61 +7,97 @@
 <link rel="manifest" href="manifest.webmanifest">
 <title>Spider AI</title>
 <style>
-:root{--red:#e62429;--blue:#0877e8}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;height:100dvh;display:flex;flex-direction:column;overflow:hidden;font:15px system-ui,-apple-system,sans-serif;color:#fff;background:linear-gradient(160deg,#1a0000,#000428 60%,#000011)}
-header{padding:9px 12px;background:linear-gradient(90deg,#e62429,#99121a);display:flex;align-items:center;gap:8px;box-shadow:0 3px 14px #0008}
-header h1{font-size:19px;margin:0;flex:1}button,select{color:#fff;background:#ffffff13;border:1px solid #ffffff35;border-radius:10px;padding:8px 10px;font:inherit}
-#chat{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
-.msg{max-width:92%;padding:10px 13px;border-radius:15px;line-height:1.48;overflow-wrap:anywhere;background:#ffffff12;border:1px solid #ffffff20}
-.user{align-self:flex-end;background:linear-gradient(135deg,#e62429,#c51d34);border-bottom-right-radius:4px}
-.ai{align-self:flex-start;border-bottom-left-radius:4px}
-.msg img,.msg video{display:block;max-width:100%;max-height:420px;border-radius:10px;margin-top:7px}
-.msg pre{white-space:pre-wrap;overflow:auto;background:#080810;padding:9px;border-radius:8px}
-.actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.actions button{font-size:12px;padding:5px 9px}
-.progress{margin-top:4px;min-width:min(260px,70vw)}.progress-label{display:flex;justify-content:space-between;gap:12px;font-size:12px;margin-bottom:5px}
-.track{height:8px;border-radius:8px;background:#ffffff20;overflow:hidden}.fill{height:100%;width:0;background:linear-gradient(90deg,var(--red),var(--blue));transition:width .2s}
-.modes{display:flex;gap:6px;padding:7px 9px;background:#050912dd}.mode{flex:1;font-size:12px;padding:8px 4px}.mode.active{background:#e6242955;border-color:var(--red)}
-#chiprow{padding:3px 10px;min-height:0}.chip{display:inline-flex;align-items:center;gap:8px;padding:6px 9px;border-radius:9px;background:#e6242933;border:1px solid var(--red);font-size:12px}
-.composer{display:flex;gap:7px;padding:9px;background:#050912ee;align-items:center;border-top:1px solid #ffffff18}
-#prompt{min-width:0;flex:1;padding:12px 14px;border:2px solid var(--red);border-radius:22px;background:#ffffff0c;color:#fff;font:inherit;outline:none}
-#send{background:linear-gradient(135deg,var(--red),var(--blue));font-size:18px}
+:root{color-scheme:dark;--bg:#212121;--panel:#2f2f2f;--panel2:#383838;--line:#454545;--text:#ececec;--muted:#a5a5a5;--accent:#10a37f;--accent2:#19c79a;--radius:18px;--safe:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;height:100dvh;overflow:hidden}
+body{display:flex;flex-direction:column;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,select{font:inherit;color:inherit}
+button{border:0;cursor:pointer;touch-action:manipulation}
+button:disabled{opacity:.38;cursor:not-allowed}
+header{height:58px;flex:none;display:flex;align-items:center;gap:9px;padding:0 12px;background:var(--bg);border-bottom:1px solid #ffffff0d}
+.brand{display:flex;align-items:center;gap:9px;flex:1;min-width:0}
+.logo{width:34px;height:34px;border-radius:11px;background:linear-gradient(145deg,#19c79a,#087b63);display:grid;place-items:center;font-size:19px}
+header h1{font-size:16px;font-weight:650;margin:0;letter-spacing:.1px}
+.header-actions{display:flex;gap:5px}
+.icon-btn{width:40px;height:40px;border-radius:13px;background:transparent;color:#d6d6d6;display:grid;place-items:center;font-size:18px}
+.icon-btn:active,.tool-btn:active,.send-btn:active{transform:scale(.96);background:#ffffff18}
+.icon-btn:hover,.tool-btn:hover{background:#ffffff12}
+#modelSel{max-width:125px;min-width:0;height:36px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:0 8px;font-size:11px;color:#ddd}
+#chat{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:20px 14px 24px;display:flex;flex-direction:column;gap:15px;scroll-behavior:smooth}
+.welcome{width:min(100%,720px);margin:auto;padding:25px 8px;text-align:center}
+.welcome-logo{width:62px;height:62px;border-radius:21px;margin:0 auto 18px;background:linear-gradient(145deg,#19c79a,#087b63);display:grid;place-items:center;font-size:32px;box-shadow:0 8px 35px #10a37f30}
+.welcome h2{font-size:clamp(24px,6vw,32px);font-weight:650;line-height:1.2;margin:0 0 10px}
+.welcome p{margin:0;color:var(--muted);font-size:14px}
+.suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:25px auto 0;max-width:620px;text-align:left}
+.suggestion{min-height:70px;padding:12px 14px;border:1px solid var(--line);border-radius:15px;background:#ffffff06;color:#ddd;text-align:left;font-size:13px}
+.suggestion b{display:block;color:#f0f0f0;font-size:13px;margin-bottom:3px}
+.suggestion span{color:var(--muted);font-size:11px}
+.msg{width:fit-content;max-width:min(92%,760px);padding:11px 15px;border-radius:18px;line-height:1.6;overflow-wrap:anywhere;background:var(--panel2);border:1px solid #ffffff08}
+.user{align-self:flex-end;background:#0b6e59;border-color:#13866e;color:#fff;border-bottom-right-radius:6px}
+.ai{align-self:flex-start;background:transparent;border-color:transparent;padding:7px 3px;max-width:min(96%,780px);border-bottom-left-radius:6px}
+.msg img,.msg video{display:block;max-width:100%;max-height:420px;border-radius:12px;margin-top:8px}
+.msg pre{white-space:pre-wrap;overflow:auto;background:#161616;padding:10px;border-radius:9px}
+.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.actions button{padding:7px 10px;border-radius:10px;background:#ffffff0b;color:#bdbdbd;font-size:12px;border:1px solid #ffffff12}
+.actions button:active{background:#ffffff20}
+#modelStatus{flex:none;padding:4px 12px;color:#929292;text-align:center;font-size:11px;min-height:22px}
+#chiprow{display:flex;gap:7px;overflow-x:auto;padding:2px 12px;white-space:nowrap;flex:none}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:6px 9px;border-radius:10px;background:#ffffff0c;border:1px solid var(--line);font-size:12px;color:#ddd}
+.chip button{background:transparent;color:#aaa;padding:0 3px}
+.tools{flex:none;display:flex;gap:7px;overflow-x:auto;padding:8px 12px 3px;scrollbar-width:none}
+.tools::-webkit-scrollbar{display:none}
+.tool-btn{white-space:nowrap;display:flex;align-items:center;gap:7px;padding:8px 12px;min-height:38px;border:1px solid var(--line);border-radius:12px;background:transparent;color:#c6c6c6;font-size:12px}
+.tool-btn.active{background:#10a37f20;border-color:#10a37f80;color:#6fe0bd}
+.tool-btn .tool-icon{font-size:15px}
+.tool-btn.soon{opacity:.42}
+.composer-wrap{flex:none;padding:8px 12px calc(10px + var(--safe));background:linear-gradient(180deg,transparent,var(--bg) 20%)}
+.composer{width:min(100%,820px);margin:0 auto;display:flex;align-items:flex-end;gap:8px;padding:8px;border-radius:24px;background:var(--panel);border:1px solid #555;box-shadow:0 5px 25px #0002}
+.composer:focus-within{border-color:#777;box-shadow:0 0 0 1px #777}
+#prompt{flex:1;min-width:0;max-height:150px;min-height:42px;resize:none;border:0;outline:0;background:transparent;color:var(--text);padding:10px 5px;font:15px/1.45 inherit}
+#prompt::placeholder{color:#999}
+.send-btn{width:42px;height:42px;flex:none;border-radius:15px;background:var(--accent);color:white;font-size:19px;display:grid;place-items:center}
+.send-btn:disabled{background:#555;opacity:1}
+.composer-hint{text-align:center;color:#858585;font-size:10px;padding-top:7px}
+.progress{margin-top:4px;min-width:min(260px,70vw)}.progress-label{display:flex;justify-content:space-between;gap:12px;font-size:12px;margin-bottom:5px}.track{height:7px;border-radius:8px;background:#ffffff20;overflow:hidden}.fill{height:100%;width:0;background:linear-gradient(90deg,#10a37f,#45d6ae);transition:width .2s}
 #fileInput{position:fixed;left:-10000px;width:1px;height:1px;opacity:0}
-.hint{text-align:center;opacity:.75;padding:25px 12px;line-height:1.7}.small{font-size:11px;opacity:.65}
-a{color:#8de8ff}
- 
-/* Mobile-first touch layout */
-:root{--safe-bottom:env(safe-area-inset-bottom,0px)}
-body{height:100dvh;min-height:100svh;padding-bottom:var(--safe-bottom)}
-header{min-height:58px;padding:8px clamp(8px,2vw,16px);gap:6px;flex-wrap:nowrap}
-header h1{font-size:clamp(16px,4vw,20px);white-space:nowrap}
-header button,header select,.composer button,.mode{min-height:44px}
-header select{max-width:36vw;min-width:0;font-size:12px;padding:7px 6px}
-#chat{padding:clamp(8px,2.5vw,16px);overscroll-behavior:contain}
-.msg{max-width:min(94%,760px);font-size:15px}
-.modes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;padding:6px 8px}
-.mode{font-size:clamp(11px,2.8vw,13px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.composer{gap:6px;padding:8px;padding-bottom:calc(8px + var(--safe-bottom))}
-.composer button{width:44px;min-width:44px;padding:0;font-size:17px;display:grid;place-items:center}
-#prompt{height:46px;min-height:46px;padding:10px 14px;font-size:16px}
-#send{border:0}
-#chiprow{display:flex;gap:5px;overflow-x:auto;padding:4px 8px;white-space:nowrap}
-.chip{flex:none}
-button,select,input{touch-action:manipulation}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #75c7ff;outline-offset:2px}
-@media(max-width:380px){header{gap:4px}header h1{font-size:15px}header button{padding:6px;width:38px}header select{max-width:31vw}.composer{gap:4px;padding-left:6px;padding-right:6px}.composer button{width:40px;min-width:40px}.modes{gap:4px;padding-left:5px;padding-right:5px}}
-@media(min-width:700px){body{max-width:980px;margin:0 auto;border-left:1px solid #ffffff18;border-right:1px solid #ffffff18}.msg{font-size:16px}.composer{padding:12px}.modes{padding:9px 12px}}
-
+a{color:#73d9bd}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #5bd9b0;outline-offset:2px}
+@media(max-width:420px){header{padding:0 8px;gap:5px}#modelSel{max-width:98px;font-size:10px}.icon-btn{width:36px}.suggestions{gap:7px}.suggestion{padding:10px;min-height:66px}.tool-btn{padding:7px 10px}.composer-wrap{padding-left:8px;padding-right:8px}}
+@media(min-width:700px){#chat{padding:28px 24px}.composer-wrap{padding-left:24px;padding-right:24px}.welcome{padding:35px 10px}}
 </style>
 </head>
 <body>
-<header><h1>🕷️ Spider AI</h1><select id="modelSel" aria-label="Модель"><option>Загрузка…</option></select><button id="settings" title="Настройки">⚙</button><button id="clear" title="Очистить">🗑</button></header>
-<main id="chat"><div class="hint"><div style="font-size:48px">🕸️</div><b>Spider AI</b><br>Чат · анализ фото и видео · генерация изображений · видеофайл WebM<br><span class="small">/img описание · /clip описание · /vid из прикреплённых фото</span></div></main>
-<div id="modelStatus" class="small" style="padding:2px 10px;text-align:center"></div>
+<header>
+ <div class="brand"><div class="logo">🕷</div><h1>Spider AI</h1></div>
+ <select id="modelSel" aria-label="Локальная модель"><option>Qwen2.5 0.5B · локально</option></select>
+ <div class="header-actions"><button class="icon-btn" id="settings" title="Состояние и настройки" aria-label="Настройки">⚙</button><button class="icon-btn" id="clear" title="Новый чат" aria-label="Новый чат">＋</button></div>
+</header>
+<main id="chat">
+ <section class="welcome" id="welcome">
+  <div class="welcome-logo">🕷</div><h2>Чем займёмся?</h2><p>Локальный ИИ-помощник. Работает на устройстве, без API-ключей.</p>
+  <div class="suggestions">
+   <button class="suggestion" data-prompt="Объясни сложную тему простыми словами"><b>📚 Объяснить тему</b><span>Понятно и по шагам</span></button>
+   <button class="suggestion" data-prompt="Помоги написать и проверить код"><b>💻 Помочь с кодом</b><span>Разработка и отладка</span></button>
+   <button class="suggestion" data-prompt="Составь подробный план решения моей задачи"><b>🧭 Составить план</b><span>Разбить задачу на этапы</span></button>
+   <button class="suggestion" data-prompt="Придумай несколько необычных идей проекта"><b>💡 Придумать идеи</b><span>Идеи и варианты</span></button>
+  </div>
+ </section>
+</main>
+<div id="modelStatus">Проверяю локальную модель…</div>
 <div id="chiprow"></div>
-<nav class="modes"><button class="mode active" data-mode="chat">💬 Чат</button><button class="mode" data-mode="img">🖼️ Фото</button><button class="mode" data-mode="clip">🎬 Видео</button><button class="mode" data-mode="edit">🪄 Правка</button><button class="mode" data-mode="file">📎 Файл</button></nav>
-<div class="composer"><button id="attach" title="Прикрепить">📎</button><button id="mic" title="Голосовой ввод">🎤</button><input id="prompt" placeholder="Напиши сообщение…" autocomplete="off"><button id="send">➤</button></div>
+<nav class="tools" aria-label="Инструменты">
+ <button class="tool-btn active" data-mode="chat"><span class="tool-icon">✳</span>Чат</button>
+ <button class="tool-btn" id="attach"><span class="tool-icon">📎</span>Файлы</button>
+ <button class="tool-btn soon" disabled title="Локальная модель для этого инструмента пока не подключена"><span class="tool-icon">▧</span>Фото · скоро</button>
+ <button class="tool-btn soon" disabled title="Локальная модель для этого инструмента пока не подключена"><span class="tool-icon">▷</span>Видео · скоро</button>
+ <button class="tool-btn soon" disabled title="Локальная модель для этого инструмента пока не подключена"><span class="tool-icon">✧</span>Правка · скоро</button>
+</nav>
+<div class="composer-wrap">
+ <div class="composer"><button class="icon-btn" id="mic" title="Голосовой ввод" aria-label="Голосовой ввод">🎙</button><textarea id="prompt" rows="1" placeholder="Спроси что-нибудь…" autocomplete="off"></textarea><button class="send-btn" id="send" aria-label="Отправить">↑</button></div>
+ <div class="composer-hint">Spider AI может ошибаться. Проверяй важную информацию.</div>
+</div>
 <input id="fileInput" type="file" multiple accept="image/*,video/*,.txt,.md,.json,.js,.ts,.py,.html,.css,.csv,.log,.xml,.yml,.yaml,.java,.sql">
-<script>
+<script><script>
 const $=id=>document.getElementById(id), chat=$('chat'), input=$('prompt'), fileInput=$('fileInput');
 const SYSTEM='Ты — Spider AI, универсальный ИИ-помощник. Отвечай на русском, понятно, структурированно и по делу.';
 const FALLBACK_MODELS=['openai/gpt-oss-20b','mistralai/mistral-small-3.2','qwen/qwen3-coder-30b-a3b-instruct','meta/llama-3.3-70b-instruct'];
@@ -148,7 +184,7 @@ function readFile(f){return new Promise((resolve,reject)=>{const r=new FileReade
 async function compressImage(file){const data=await readFile(file);return new Promise(resolve=>{const im=new Image();im.onload=()=>{const scale=Math.min(1,1000/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*scale);c.height=Math.round(im.height*scale);c.getContext('2d').drawImage(im,0,0,c.width,c.height);resolve(c.toDataURL('image/jpeg',.82))};im.onerror=()=>resolve(null);im.src=data})}
 async function extractFrames(file,count=4){const u=URL.createObjectURL(file),v=document.createElement('video');v.preload='auto';v.muted=true;v.playsInline=true;return new Promise(resolve=>{v.onerror=()=>{URL.revokeObjectURL(u);resolve([])};v.onloadedmetadata=async()=>{const w=Math.min(640,v.videoWidth||640),h=Math.max(1,Math.round((v.videoHeight||360)*w/(v.videoWidth||640))),c=document.createElement('canvas'),ctx=c.getContext('2d');c.width=w;c.height=h;const out=[];for(let i=0;i<count;i++){const t=Math.min(v.duration*(i+.5)/count,Math.max(0,v.duration-.06));await new Promise(ok=>{let settled=false;const finish=()=>{if(settled)return;settled=true;try{ctx.drawImage(v,0,0,w,h);out.push(c.toDataURL('image/jpeg',.76))}catch(e){}ok()};v.addEventListener('seeked',finish,{once:true});v.currentTime=t;setTimeout(finish,4500)})}URL.revokeObjectURL(u);resolve(out)};v.src=u;v.load()})}
 fileInput.onchange=async()=>{for(const f of [...fileInput.files]){if(f.type.startsWith('image/')){if(f.size>12*1024*1024){alert('Фото должно быть до 12 МБ');continue}const data=await compressImage(f);if(data)attachments.push({type:'image',data,name:f.name})}else if(f.type.startsWith('video/')){const frames=await extractFrames(f,4);if(frames.length)attachments.push({type:'video',frames,name:f.name})}else{try{attachments.push({type:'text',content:(await f.text()).slice(0,20000),name:f.name})}catch(e){}}}fileInput.value='';renderChips()};
-$('attach').onclick=()=>fileInput.click();document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{if(b.dataset.mode!=='chat'&&b.dataset.mode!=='file'){alert('В автономной сборке сейчас доступен локальный текстовый ИИ. Генерация фото/видео и правка появятся только после подключения локальных мультимодальных моделей.');return}mode=b.dataset.mode;document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('active',x===b));input.placeholder=mode==='img'?'Опиши изображение…':mode==='clip'?'Опиши короткий видеоклип…':'Напиши сообщение…';if(mode==='file')fileInput.click()});
+$('attach').onclick=()=>fileInput.click();$('attach').onclick=()=>fileInput.click();document.querySelectorAll('.tool-btn[data-mode]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tool-btn').forEach(x=>x.classList.toggle('active',x===b));mode='chat';input.focus()});
 async function editImage(prompt,items){
  if(!items.length){addMessage('ai','Прикрепи изображение и напиши, что изменить.',null,false);return}
  if(!pollenKey){addMessage('ai','Для редактирования нужен Pollinations sk_-ключ. Добавь его через ⚙.',null,false);return}
@@ -188,11 +224,11 @@ async function generateClip(prompt){
 async function videoFromPhotos(items){if(!items.length)return;const pb=progress('Передаю фото видеомодели');try{if(!pollenKey)throw Error('Нужен личный Pollinations sk_-ключ в ⚙');const model=videoModels.find(x=>/wan|veo|seedance|ltx|kling|video/i.test(x));if(!model)throw Error('Нет доступной видеомодели с поддержкой каталога');const content=[{type:'text',text:'Create a short video using the attached image as the first frame. Preserve the main subject. Add natural motion. '+(input.value||'')}];content.push({type:'image_url',image_url:{url:items[0].data}});const r=await fetch('https://gen.pollinations.ai/v1/chat/completions',{method:'POST',headers:authHeaders(true),body:JSON.stringify({model,messages:[{role:'user',content}]})});if(!r.ok)throw Error('Video model HTTP '+r.status);const j=await r.json(),txt=j.choices?.[0]?.message?.content||'';const match=txt.match(/https?:\/\/[^\s)]+/i);if(match){pb.done();addMessage('ai','Видео готово: '+model,'<video controls playsinline src="'+esc(match[0])+'"></video>',false)}else{pb.done();addMessage('ai',txt||'Модель не вернула ссылку на видео.',null,false)}}catch(e){pb.done();addMessage('ai','Не удалось сделать видео из фото: '+e.message,null,false)}}
 async function send(){const text=input.value.trim(),files=attachments.slice();if(!text&&!files.length)return;input.value='';attachments=[];renderChips();const command=text.match(/^\/(img|image|фото|clip|video|видео|vid|edit|правка)\s*(.*)$/i);if(mode==='edit'||command&&/^(edit|правка)$/i.test(command[1]))return editImage(command?command[2]:text,files.filter(x=>x.type==='image'));if(mode==='img'||command&&/^(img|image|фото)$/i.test(command[1]))return generateImage(command?command[2]:text);if(mode==='clip'||command&&/^(clip|video|видео)$/i.test(command[1]))return generateClip(command?command[2]:text);if(command&&command[1].toLowerCase()==='vid'){const photos=files.filter(x=>x.type==='image');if(photos.length)return videoFromPhotos(photos);if(text.length>4)return generateClip(text.slice(4));addMessage('ai','Прикрепи фото и отправь /vid.',null,false);return}
 const imgs=files.filter(x=>x.type==='image').map(x=>x.data);const vids=files.filter(x=>x.type==='video');let prompt=text||'Проанализируй вложения и опиши их';files.filter(x=>x.type==='text').forEach(x=>prompt+='\n\nФайл '+x.name+':\n'+x.content);vids.forEach(v=>prompt+='\nВидео '+v.name+': проанализируй ключевые кадры по порядку.');if(vids.length)imgs.push(...vids.flatMap(v=>v.frames));addMessage('user',text||'📎 Вложения',esc(text||'Вложения: '+files.map(x=>x.name).join(', '))+(imgs.length?'<div class="small">Изображений/кадров: '+imgs.length+'</div>':''));const pb=progress('Отправляю запрос');const stop=timerProgress(pb);try{const ans=await ask(prompt,imgs);stop();pb.done('Ответ получен');addMessage('ai',ans)}catch(e){stop();pb.done('Ошибка');addMessage('ai','❌ '+e.message,null,false)}}
-$('send').onclick=send;input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();send()}});
+$('send').onclick=send;input.addEventListener('input',()=>{input.style.height='42px';input.style.height=Math.min(input.scrollHeight,150)+'px'});input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}});document.querySelectorAll('[data-prompt]').forEach(b=>b.onclick=()=>{input.value=b.dataset.prompt;input.focus();input.dispatchEvent(new Event('input'))});
 $('mic').onclick=()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){alert('Голосовой ввод не поддерживается');return}const r=new SR();r.lang='ru-RU';r.interimResults=false;r.onresult=e=>{input.value=e.results[0][0].transcript;input.focus()};r.onerror=()=>alert('Не удалось распознать речь');r.start()};
-$('clear').onclick=()=>{if(confirm('Очистить историю чата?')){history=[];save();chat.innerHTML='<div class="hint">🕸️ История очищена. Чем займёмся?</div>'}};
+$('clear').onclick=()=>{if(confirm('Начать новый чат? История будет очищена.')){history=[];save();chat.innerHTML='<section class="welcome"><div class="welcome-logo">🕷</div><h2>Новый чат</h2><p>Задай вопрос — локальный ИИ ответит.</p></section>'}};
 if(history.length){chat.innerHTML='';history.forEach(m=>addMessage(m.r,m.t,null,false))}
-loadModels();\nif(window.SpiderLocal){$('modelSel').innerHTML='<option>Qwen2.5 0.5B · локально</option>'; $('modelStatus').textContent=window.SpiderLocal.status();}
+if(window.SpiderLocal){$('modelSel').innerHTML='<option>Qwen2.5 0.5B · локально</option>'; $('modelStatus').textContent=window.SpiderLocal.status();}
 </script>
 </body>
 </html>
