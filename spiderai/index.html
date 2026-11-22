@@ -1,66 +1,97 @@
-<!DOCTYPE html>
-<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><meta name="theme-color" content="#e62429"><link rel="manifest" href="manifest.webmanifest"><title>Spider AI</title>
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#e62429">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Spider AI</title>
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;font:15px system-ui,sans-serif;background:linear-gradient(160deg,#1a0000,#000428 60%,#000011);color:#fff;height:100dvh;display:flex;flex-direction:column;overflow:hidden}header{padding:9px 10px;background:linear-gradient(90deg,#e62429,#9d1118);text-align:center}header h1{margin:0;font-size:19px}header select{width:100%;margin-top:7px;padding:8px;border:0;border-radius:8px;background:#401016;color:white}.chat{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px}.msg{max-width:90%;padding:10px 13px;border-radius:15px;line-height:1.5;overflow-wrap:anywhere;background:#ffffff13;border:1px solid #ffffff20}.user{align-self:flex-end;background:#d92530}.ai{align-self:flex-start}.msg img{max-width:100%;border-radius:9px;display:block;margin-top:7px}.actions{display:flex;gap:5px;margin-top:7px}.actions button,.mode,.btn{border:1px solid #ffffff25;border-radius:9px;background:#ffffff12;color:white;padding:7px 10px}.modes{display:flex;gap:5px;padding:7px 9px;background:#050912dd}.mode{flex:1;font-size:12px}.mode.active{background:#e6242955;border-color:#e62429}.chiprow{padding:3px 10px;min-height:0}.chip{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border-radius:9px;background:#e6242933;border:1px solid #e62429;font-size:12px}.chip button{background:none;border:0;color:white}.composer{display:flex;gap:7px;padding:9px;background:#050912dd;align-items:center}.composer input{min-width:0;flex:1;padding:12px;border:2px solid #e62429;border-radius:22px;background:#ffffff0c;color:white;font:inherit}.send{background:linear-gradient(135deg,#e62429,#0476f2);font-size:18px}.hint{text-align:center;opacity:.65;font-size:12px;padding:20px}.loader{font-size:28px;text-align:center}.slideshow{position:relative;aspect-ratio:16/9;border-radius:10px;overflow:hidden}.slideshow img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;animation:fade 9s infinite}.slideshow img:nth-child(2){animation-delay:3s}.slideshow img:nth-child(3){animation-delay:6s}@keyframes fade{0%,100%{opacity:0}10%,33%{opacity:1}43%{opacity:0}}#fileInput{position:fixed;left:0;bottom:0;width:1px;height:1px;opacity:.01;z-index:-1}
-</style></head><body>
-<header><h1>🕷️ Spider AI</h1><select id="modelSel"><option value="openai-fast">openai-fast</option><option value="openai">openai</option><option value="mistral">mistral</option><option value="deepseek">deepseek</option></select></header>
-<main id="chat" class="chat"><div class="hint">🕸️ Spider AI — чат, фото, видео и файлы в одной ленте</div></main><div id="chiprow" class="chiprow"></div>
-<nav class="modes"><button class="mode active" data-mode="chat">💬 Текст</button><button class="mode" data-mode="img">🖼️ Фото</button><button class="mode" data-mode="vid">🎬 Видео</button><button class="mode" data-mode="file">📎 Файл</button></nav>
-<div class="composer"><button class="btn" id="attach">📎</button><button class="btn" id="mic">🎤</button><input id="prompt" placeholder="Напиши сообщение…" autocomplete="off"><button class="btn send" id="send">➤</button></div>
-<input id="fileInput" type="file" accept="image/*,video/*,.txt,.md,.json,.js,.ts,.py,.html,.css,.csv,.log,.xml,.yml,.yaml,.java,.sql">
+:root{--red:#e62429;--blue:#0877e8}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;height:100dvh;display:flex;flex-direction:column;overflow:hidden;font:15px system-ui,-apple-system,sans-serif;color:#fff;background:linear-gradient(160deg,#1a0000,#000428 60%,#000011)}
+header{padding:9px 12px;background:linear-gradient(90deg,#e62429,#99121a);display:flex;align-items:center;gap:8px;box-shadow:0 3px 14px #0008}
+header h1{font-size:19px;margin:0;flex:1}button,select{color:#fff;background:#ffffff13;border:1px solid #ffffff35;border-radius:10px;padding:8px 10px;font:inherit}
+#chat{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+.msg{max-width:92%;padding:10px 13px;border-radius:15px;line-height:1.48;overflow-wrap:anywhere;background:#ffffff12;border:1px solid #ffffff20}
+.user{align-self:flex-end;background:linear-gradient(135deg,#e62429,#c51d34);border-bottom-right-radius:4px}
+.ai{align-self:flex-start;border-bottom-left-radius:4px}
+.msg img,.msg video{display:block;max-width:100%;max-height:420px;border-radius:10px;margin-top:7px}
+.msg pre{white-space:pre-wrap;overflow:auto;background:#080810;padding:9px;border-radius:8px}
+.actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.actions button{font-size:12px;padding:5px 9px}
+.progress{margin-top:4px;min-width:min(260px,70vw)}.progress-label{display:flex;justify-content:space-between;gap:12px;font-size:12px;margin-bottom:5px}
+.track{height:8px;border-radius:8px;background:#ffffff20;overflow:hidden}.fill{height:100%;width:0;background:linear-gradient(90deg,var(--red),var(--blue));transition:width .2s}
+.modes{display:flex;gap:6px;padding:7px 9px;background:#050912dd}.mode{flex:1;font-size:12px;padding:8px 4px}.mode.active{background:#e6242955;border-color:var(--red)}
+#chiprow{padding:3px 10px;min-height:0}.chip{display:inline-flex;align-items:center;gap:8px;padding:6px 9px;border-radius:9px;background:#e6242933;border:1px solid var(--red);font-size:12px}
+.composer{display:flex;gap:7px;padding:9px;background:#050912ee;align-items:center;border-top:1px solid #ffffff18}
+#prompt{min-width:0;flex:1;padding:12px 14px;border:2px solid var(--red);border-radius:22px;background:#ffffff0c;color:#fff;font:inherit;outline:none}
+#send{background:linear-gradient(135deg,var(--red),var(--blue));font-size:18px}
+#fileInput{position:fixed;left:-10000px;width:1px;height:1px;opacity:0}
+.hint{text-align:center;opacity:.75;padding:25px 12px;line-height:1.7}.small{font-size:11px;opacity:.65}
+a{color:#8de8ff}
+</style>
+</head>
+<body>
+<header><h1>🕷️ Spider AI</h1><select id="modelSel" aria-label="Модель"><option>Загрузка…</option></select><button id="settings" title="Настройки">⚙</button><button id="clear" title="Очистить">🗑</button></header>
+<main id="chat"><div class="hint"><div style="font-size:48px">🕸️</div><b>Spider AI</b><br>Чат · анализ фото и видео · генерация изображений · видеофайл WebM<br><span class="small">/img описание · /clip описание · /vid из прикреплённых фото</span></div></main>
+<div id="chiprow"></div>
+<nav class="modes"><button class="mode active" data-mode="chat">💬 Чат</button><button class="mode" data-mode="img">🖼️ Фото</button><button class="mode" data-mode="clip">🎬 Видео</button><button class="mode" data-mode="file">📎 Файл</button></nav>
+<div class="composer"><button id="attach" title="Прикрепить">📎</button><button id="mic" title="Голосовой ввод">🎤</button><input id="prompt" placeholder="Напиши сообщение…" autocomplete="off"><button id="send">➤</button></div>
+<input id="fileInput" type="file" multiple accept="image/*,video/*,.txt,.md,.json,.js,.ts,.py,.html,.css,.csv,.log,.xml,.yml,.yaml,.java,.sql">
 <script>
-const $=id=>document.getElementById(id),chat=$('chat'),input=$('prompt'),file=$('fileInput');let mode='chat',attachment=null,history=[];try{history=JSON.parse(localStorage.getItem('sp_h')||'[]')}catch(e){}
+const $=id=>document.getElementById(id), chat=$('chat'), input=$('prompt'), fileInput=$('fileInput');
+const SYSTEM='Ты — Spider AI, универсальный ИИ-помощник. Отвечай на русском, понятно, структурированно и по делу.';
+const FALLBACK_MODELS=['openai-fast','openai','mistral','deepseek','qwen','gemini'];
+let mode='chat', attachments=[], history=[], modelList=FALLBACK_MODELS.slice(), apiKey=localStorage.getItem('spider_gkey')||'';
+try{history=JSON.parse(localStorage.getItem('sp_h')||'[]')}catch(e){}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-function add(role,text,html,save=true){const d=document.createElement('div');d.className='msg '+role;const b=document.createElement('div');b.innerHTML=html||esc(text).replace(/\n/g,'<br>');d.append(b);const a=document.createElement('div');a.className='actions';a.innerHTML='<button>📋 Копировать</button>'+(role==='ai'?'<button>🔊</button>':'')+(b.querySelector('img')?'<button>💾</button>':'');a.children[0].onclick=async()=>{try{await navigator.clipboard.writeText(text)}catch(e){const t=document.createElement('textarea');t.value=text;document.body.append(t);t.select();document.execCommand('copy');t.remove()}a.children[0].textContent='✅ Скопировано'};if(a.children[1]&&role==='ai')a.children[1].onclick=()=>speak(text);if(a.lastElementChild&&b.querySelector('img'))a.lastElementChild.onclick=()=>download(b.querySelector('img').src);d.append(a);chat.append(d);chat.scrollTop=chat.scrollHeight;if(save){history.push({r:role,t:text});history=history.slice(-100);localStorage.setItem('sp_h',JSON.stringify(history))}return d}
-function speak(t){if(window.speechSynthesis){speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(t))}}
-function download(url){const a=document.createElement('a');a.href=url;a.download='spider-image.jpg';a.click()}
-const TEXT_MODELS=['openai-fast','openai','mistral','deepseek','qwen','gemini'];
-async function ask(text,images=[]){
-  const selected=$('modelSel').value;
-  const models=[selected,...TEXT_MODELS.filter(m=>m!==selected)];
-  if(images.length){
-    let last='Vision endpoint unavailable';
-    for(const model of models){
-      try{
-        const content=[{type:'text',text}];
-        images.forEach(url=>content.push({type:'image_url',image_url:{url}}));
-        const controller=new AbortController(), timer=setTimeout(()=>controller.abort(),55000);
-        const response=await fetch('https://text.pollinations.ai/?model='+encodeURIComponent(model),{
-          method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({model,messages:[{role:'system',content:'Ты Spider AI. Отвечай по-русски, понятно и по делу.'},{role:'user',content}]}),
-          signal:controller.signal
-        });
-        clearTimeout(timer);
-        if(response.ok){const answer=await response.text();if(answer.trim())return answer;}
-        last=model+': HTTP '+response.status;
-      }catch(e){last=model+': '+e.message;}
-    }
-    throw Error('Анализ фото/видео не прошёл. '+last+'; попробуй позже.');
-  }
-  let last='Нет доступных моделей';
-  for(const model of models){
-    try{
-      const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),40000);
-      const url='https://text.pollinations.ai/'+encodeURIComponent(text)+'?model='+encodeURIComponent(model)+'&seed='+Math.floor(Math.random()*1000000);
-      const response=await fetch(url,{signal:controller.signal});
-      clearTimeout(timer);
-      if(response.ok){const answer=await response.text();if(answer.trim()&&!answer.trim().startsWith('<'))return answer;}
-      last=model+': HTTP '+response.status;
-    }catch(e){last=model+': '+e.message;}
-  }
-  throw Error('Все текстовые модели недоступны ('+last+'). Попробуй позже.');
+function save(){try{localStorage.setItem('sp_h',JSON.stringify(history.slice(-80)))}catch(e){}}
+function addMessage(role,text,html,saveIt=true){
+ const d=document.createElement('div');d.className='msg '+role;
+ const body=document.createElement('div');body.innerHTML=html||esc(text).replace(/\n/g,'<br>');d.append(body);
+ if(role==='ai'){
+  const bar=document.createElement('div');bar.className='actions';
+  const cp=document.createElement('button');cp.textContent='📋 Копировать';cp.onclick=()=>copyText(text,cp);bar.append(cp);
+  const sp=document.createElement('button');sp.textContent='🔊 Озвучить';sp.onclick=()=>speak(text);bar.append(sp);
+  const media=body.querySelector('img,video');
+  if(media){const dl=document.createElement('button');dl.textContent='💾 Скачать';dl.onclick=()=>download(media.src,media.tagName==='VIDEO'?'spider-video.webm':'spider-image.jpg');bar.append(dl)}
+  d.append(bar);
+ }
+ chat.append(d);chat.scrollTop=chat.scrollHeight;
+ if(saveIt){history.push({r:role,t:text});history=history.slice(-80);save()}
+ return d;
 }
-function chip(){const w=$('chiprow');w.innerHTML='';if(!attachment)return;const c=document.createElement('span');c.className='chip';c.textContent=(attachment.type==='video'?'🎬 ':attachment.type==='image'?'📷 ':'📄 ')+attachment.name;const x=document.createElement('button');x.textContent='✖';x.onclick=()=>{attachment=null;file.value='';chip()};c.append(x);w.append(c)}
-function imageData(f){return new Promise(resolve=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas'),s=Math.min(1,1024/Math.max(im.width,im.height));c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);resolve(c.toDataURL('image/jpeg',.82))};im.onerror=()=>resolve(null);im.src=URL.createObjectURL(f)})}
-function framesOf(f,n=3){return new Promise(resolve=>{const v=document.createElement('video'),u=URL.createObjectURL(f);v.preload='auto';v.muted=true;v.playsInline=true;v.onloadedmetadata=async()=>{const c=document.createElement('canvas'),ctx=c.getContext('2d'),w=Math.min(640,v.videoWidth),h=Math.round(v.videoHeight*w/v.videoWidth);c.width=w;c.height=h;const out=[];for(let i=0;i<n;i++){const t=Math.min(Math.max(0,v.duration*(i+.5)/n),Math.max(0,v.duration-.05));await new Promise(ok=>{const done=()=>{v.removeEventListener('seeked',done);try{ctx.drawImage(v,0,0,w,h);out.push(c.toDataURL('image/jpeg',.78))}catch(e){}ok()};v.addEventListener('seeked',done,{once:true});v.currentTime=t;setTimeout(ok,4000)});}URL.revokeObjectURL(u);resolve(out)};v.onerror=()=>{URL.revokeObjectURL(u);resolve([])};v.src=u;v.load()})}
-file.onchange=async()=>{const f=file.files&&file.files[0];if(!f)return;const w=$('chiprow');w.textContent='⏳ Обрабатываю '+f.name;if(f.type.startsWith('video/')){const fr=await framesOf(f);attachment=fr.length?{type:'video',frames:fr,name:f.name}:null}else if(f.type.startsWith('image/')){const data=await imageData(f);attachment=data?{type:'image',data,name:f.name}:null}else{try{attachment={type:'text',content:(await f.text()).slice(0,20000),name:f.name}}catch(e){attachment=null}}file.value='';chip();if(!attachment)w.textContent='Не удалось прочитать файл'}
-function choose(){file.click()}
-document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('active',x===b));if(mode==='file'){choose();return}input.placeholder={chat:'Напиши сообщение…',img:'Опиши картинку для генерации…',vid:'Опиши клип или прикрепи своё видео…'}[mode]});
-$('attach').onclick=choose;
-async function send(){const t=input.value.trim();if(mode==='img'){if(!t)return;input.value='';add('user','🖼️ '+t);const d=add('ai','Рисую…');try{const url='https://image.pollinations.ai/prompt/'+encodeURIComponent(t)+'?width=1024&height=1024&nologo=true';const im=new Image();im.onload=()=>{d.remove();add('ai','🖼️ '+t,'<b>🖼️ '+esc(t)+'</b><img src="'+url+'">',false)};im.onerror=()=>{d.remove();add('ai','Не удалось создать изображение. Попробуй ещё раз.',null,false)};im.src=url}catch(e){d.remove();add('ai',e.message,null,false)}return}
-if(mode==='vid'&&!attachment){if(!t)return;input.value='';add('user','🎬 '+t);const d=add('ai','Создаю три кадра…');try{const urls=[1,2,3].map(i=>'https://image.pollinations.ai/prompt/'+encodeURIComponent('Cinematic frame '+i+' of 3, consistent characters and scene: '+t)+'?width=960&height=540&nologo=true&seed='+(Date.now()+i));await Promise.all(urls.map(u=>new Promise((ok,no)=>{const im=new Image();im.onload=ok;im.onerror=no;im.src=u})));d.remove();add('ai','Клип из трёх кадров — это слайд-шоу, не полноценное видео','<div class="slideshow">'+urls.map(u=>'<img src="'+u+'">').join('')+'</div>',false)}catch(e){d.remove();add('ai','Ошибка создания кадров',null,false)}return}
-if(!t&&!attachment)return;input.value='';const a=attachment;attachment=null;chip();add('user',t||('📎 '+a.name),esc(t||a.name)+(a&&a.type==='image'?'<img src="'+a.data+'">':''));let q=t||'Проанализируй вложение';let imgs=[];if(a?.type==='image')imgs=[a.data];if(a?.type==='text')q+='\nФайл '+a.name+':\n'+a.content;if(a?.type==='video'){imgs=a.frames;q+='\nПроанализируй кадры видео по порядку.'}const d=add('ai','Думаю…');try{const ans=await ask(q,imgs);d.remove();add('ai',ans)}catch(e){d.remove();add('ai','❌ '+e.message,null,false)}}
-$('send').onclick=send;input.onkeydown=e=>{if(e.key==='Enter')send()};$('mic').onclick=()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){alert('Голосовой ввод не поддерживается');return}const r=new SR();r.lang='ru-RU';r.onresult=e=>input.value=e.results[0][0].transcript;r.start()};
-$('modelSel').onchange=()=>localStorage.setItem('sp_model',$('modelSel').value);$('modelSel').value=localStorage.getItem('sp_model')||'openai-fast';
-if(history.length){chat.innerHTML='';history.forEach(m=>add(m.r,m.t,null,false))}
-</script></body></html>
+function copyText(t,b){const fallback=()=>{const x=document.createElement('textarea');x.value=t;document.body.append(x);x.select();document.execCommand('copy');x.remove()};(navigator.clipboard?.writeText(t)||Promise.reject()).then(()=>{}).catch(fallback);b.textContent='✅ Скопировано';setTimeout(()=>b.textContent='📋 Копировать',1400)}
+function speak(t){if(!('speechSynthesis'in window))return; speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/[`*_#]/g,''));u.lang='ru-RU';speechSynthesis.speak(u)}
+function download(url,name){const a=document.createElement('a');a.href=url;a.download=name;a.click()}
+function progress(label){const d=document.createElement('div');d.className='msg ai';d.innerHTML='<div class="progress"><div class="progress-label"><span></span><b>0%</b></div><div class="track"><div class="fill"></div></div></div>';chat.append(d);chat.scrollTop=chat.scrollHeight;const l=d.querySelector('span'),p=d.querySelector('b'),f=d.querySelector('.fill');return{el:d,set(n,s){n=Math.max(0,Math.min(100,Math.round(n)));f.style.width=n+'%';p.textContent=n+'%';l.textContent=s||label;chat.scrollTop=chat.scrollHeight},done(s){this.set(100,s||'Готово')}}}
+function timerProgress(pb){let n=2;const id=setInterval(()=>{n=Math.min(90,n+1+Math.random()*3);pb.set(n,'🕷️ Получаю ответ…')},650);return()=>clearInterval(id)}
+async function loadModels(){try{const r=await fetch('https://text.pollinations.ai/models');if(!r.ok)throw Error();const data=await r.json();const found=data.map(x=>typeof x==='string'?x:x.name).filter(Boolean);if(found.length)modelList=found.slice(0,40)}catch(e){}const sel=$('modelSel');sel.innerHTML='';modelList.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.append(o)});const saved=localStorage.getItem('sp_model');if(saved&&modelList.includes(saved))sel.value=saved}
+$('modelSel').onchange=()=>localStorage.setItem('sp_model',$('modelSel').value);
+$('settings').onclick=()=>{const k=prompt('Необязательный Gemini API key. Можно оставить пустым — тогда используются доступные модели Pollinations.',apiKey);if(k===null)return;apiKey=k.trim();if(apiKey)localStorage.setItem('spider_gkey',apiKey);else localStorage.removeItem('spider_gkey');alert(apiKey?'Ключ сохранён на этом устройстве.':'Ключ удалён.')};
+async function askGemini(text,images){const parts=[{text}];for(const data of images)parts.push({inline_data:{mime_type:'image/jpeg',data:data.split(',')[1]}});const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+encodeURIComponent(apiKey),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system_instruction:{parts:[{text:SYSTEM}]},contents:[{role:'user',parts}]})});if(!r.ok)throw Error('Gemini HTTP '+r.status);const j=await r.json();return(j.candidates?.[0]?.content?.parts||[]).map(x=>x.text||'').join('')||'Пустой ответ'}
+async function ask(text,images=[]){if(apiKey){try{return await askGemini(text,images)}catch(e){console.warn('Gemini fallback',e)}}const chosen=$('modelSel').value;const chain=[chosen,...modelList.filter(x=>x!==chosen),...FALLBACK_MODELS.filter(x=>x!==chosen&&!modelList.includes(x))];let last='нет ответа';for(const m of chain){try{const c=new AbortController(),to=setTimeout(()=>c.abort(),50000);let r;if(images.length){const content=[{type:'text',text}];images.forEach(url=>content.push({type:'image_url',image_url:{url}}));r=await fetch('https://text.pollinations.ai/?model='+encodeURIComponent(m),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:m,messages:[{role:'system',content:SYSTEM},{role:'user',content}]}),signal:c.signal})}else{r=await fetch('https://text.pollinations.ai/'+encodeURIComponent(text)+'?model='+encodeURIComponent(m)+'&seed='+Math.floor(Math.random()*1e6),{signal:c.signal})}clearTimeout(to);if(r.ok){const t=await r.text();if(t.trim()&&!t.trim().startsWith('<'))return t}last=m+' HTTP '+r.status}catch(e){last=m+' '+e.message}}throw Error('Модели временно недоступны ('+last+'). Попробуй позже.')}
+function renderChips(){const w=$('chiprow');w.innerHTML='';attachments.forEach((a,i)=>{const c=document.createElement('span');c.className='chip';c.textContent=(a.type==='image'?'📷 ':a.type==='video'?'🎬 ':'📄 ')+a.name+' ';const b=document.createElement('button');b.textContent='✖';b.onclick=()=>{attachments.splice(i,1);renderChips()};c.append(b);w.append(c)})}
+function readFile(f){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(f)})}
+async function compressImage(file){const data=await readFile(file);return new Promise(resolve=>{const im=new Image();im.onload=()=>{const scale=Math.min(1,1000/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*scale);c.height=Math.round(im.height*scale);c.getContext('2d').drawImage(im,0,0,c.width,c.height);resolve(c.toDataURL('image/jpeg',.82))};im.onerror=()=>resolve(null);im.src=data})}
+async function extractFrames(file,count=4){const u=URL.createObjectURL(file),v=document.createElement('video');v.preload='auto';v.muted=true;v.playsInline=true;return new Promise(resolve=>{v.onerror=()=>{URL.revokeObjectURL(u);resolve([])};v.onloadedmetadata=async()=>{const w=Math.min(640,v.videoWidth||640),h=Math.max(1,Math.round((v.videoHeight||360)*w/(v.videoWidth||640))),c=document.createElement('canvas'),ctx=c.getContext('2d');c.width=w;c.height=h;const out=[];for(let i=0;i<count;i++){const t=Math.min(v.duration*(i+.5)/count,Math.max(0,v.duration-.06));await new Promise(ok=>{let settled=false;const finish=()=>{if(settled)return;settled=true;try{ctx.drawImage(v,0,0,w,h);out.push(c.toDataURL('image/jpeg',.76))}catch(e){}ok()};v.addEventListener('seeked',finish,{once:true});v.currentTime=t;setTimeout(finish,4500)})}URL.revokeObjectURL(u);resolve(out)};v.src=u;v.load()})}
+fileInput.onchange=async()=>{for(const f of [...fileInput.files]){if(f.type.startsWith('image/')){if(f.size>12*1024*1024){alert('Фото должно быть до 12 МБ');continue}const data=await compressImage(f);if(data)attachments.push({type:'image',data,name:f.name})}else if(f.type.startsWith('video/')){const frames=await extractFrames(f,4);if(frames.length)attachments.push({type:'video',frames,name:f.name})}else{try{attachments.push({type:'text',content:(await f.text()).slice(0,20000),name:f.name})}catch(e){}}}fileInput.value='';renderChips()};
+$('attach').onclick=()=>fileInput.click();document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('active',x===b));input.placeholder=mode==='img'?'Опиши изображение…':mode==='clip'?'Опиши короткий видеоклип…':'Напиши сообщение…';if(mode==='file')fileInput.click()});
+function imageURL(prompt,w=1024,h=1024){return 'https://image.pollinations.ai/prompt/'+encodeURIComponent(prompt)+'?model=flux&width='+w+'&height='+h+'&nologo=true&enhance=true&seed='+Math.floor(Math.random()*1e6)}
+async function fetchImage(url,pb,base,span,label){const r=await fetch(url);if(!r.ok)throw Error('HTTP '+r.status);const total=+r.headers.get('content-length')||0,reader=r.body.getReader(),chunks=[];let got=0;while(true){const x=await reader.read();if(x.done)break;chunks.push(x.value);got+=x.value.length;pb.set(total?base+span*got/total:Math.min(base+span-2,base+span*got/60000),label)}const all=new Uint8Array(got);let off=0;chunks.forEach(c=>{all.set(c,off);off+=c.length});return URL.createObjectURL(new Blob([all],{type:r.headers.get('content-type')||'image/jpeg'}))}
+async function generateImage(prompt){if(!prompt)return;addMessage('user','🖼️ '+prompt);const pb=progress('Генерирую изображение');try{let w=1024,h=1024;if(/вертикал|портрет|9:16/i.test(prompt)){w=832;h=1216}else if(/горизонт|широк|16:9/i.test(prompt)){w=1216;h=832}const url=await fetchImage(imageURL(prompt,w,h),pb,0,96,'🖼️ Генерирую и загружаю…');pb.done('Фото готово');const html='<img src="'+url+'" alt="Созданное изображение">';addMessage('ai','Изображение готово: '+prompt,html,false)}catch(e){pb.done('Ошибка');addMessage('ai','Не удалось создать фото: '+e.message,null,false)}}
+function loadImg(url){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(Error('Не удалось загрузить кадр'));i.src=url})}
+const VW=1280,VH=720,FRAME_SECONDS=2.5,FADE=.55;
+function drawCover(ctx,img,progress,reverse){const scale=Math.max(VW/img.width,VH/img.height)*(reverse?1.12-.12*progress:1+.12*progress),w=img.width*scale,h=img.height*scale,pan=(progress-.5)*36*(reverse?-1:1);ctx.drawImage(img,(VW-w)/2+pan,(VH-h)/2,w,h)}
+async function buildWebM(images,pb){if(!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream)throw Error('Запись видео WebM не поддерживается этим браузером');const c=document.createElement('canvas');c.width=VW;c.height=VH;const ctx=c.getContext('2d'),stream=c.captureStream(30),mime=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(x=>MediaRecorder.isTypeSupported(x));const rec=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:2500000}:{}),chunks=[];rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};const stopped=new Promise((resolve,reject)=>{rec.onstop=resolve;rec.onerror=()=>reject(Error('Ошибка записи видео'))});rec.start();const total=images.length*FRAME_SECONDS,start=performance.now();await new Promise(resolve=>{function frame(now){const elapsed=Math.min(total,(now-start)/1000),idx=Math.min(images.length-1,Math.floor(elapsed/FRAME_SECONDS)),local=elapsed-idx*FRAME_SECONDS;ctx.fillStyle='#000';ctx.fillRect(0,0,VW,VH);drawCover(ctx,images[idx],local/FRAME_SECONDS,idx%2===1);if(local>FRAME_SECONDS-FADE&&idx<images.length-1){const p=(local-(FRAME_SECONDS-FADE))/FADE;ctx.globalAlpha=p;drawCover(ctx,images[idx+1],p,idx%2===0);ctx.globalAlpha=1}pb.set(80+19*elapsed/total,'🎞️ Собираю видеофайл…');if(elapsed>=total)resolve();else requestAnimationFrame(frame)}requestAnimationFrame(frame)});rec.stop();stream.getTracks().forEach(t=>t.stop());await stopped;return URL.createObjectURL(new Blob(chunks,{type:rec.mimeType||'video/webm'}))}
+async function generateClip(prompt){if(!prompt)return;addMessage('user','🎬 '+prompt);const pb=progress('Создаю видеокадры');try{const imgs=[];for(let i=0;i<5;i++){pb.set(i/5*78,'🎨 Генерирую кадр '+(i+1)+'/5');const u=await fetchImage(imageURL('cinematic storyboard frame '+(i+1)+' of 5, same scene and consistent characters, 16:9: '+prompt,1280,720),pb,i/5*78,78/5,'🎨 Кадр '+(i+1)+'/5');imgs.push(await loadImg(u))}const url=await buildWebM(imgs,pb);pb.done('Видео WebM готово');addMessage('ai','Готово: видеофайл WebM из пяти сгенерированных ИИ-кадров. Это анимированная последовательность с панорамированием и переходами, не покадровая генерация движения моделью.','<video controls playsinline src="'+url+'"></video><div class="small">1280×720 · около 12,5 секунд · WebM</div>',false)}catch(e){pb.done('Ошибка');addMessage('ai','Не удалось собрать видео: '+e.message,null,false)}}
+async function videoFromPhotos(items){const pb=progress('Собираю видео из фото');try{const imgs=[];for(let i=0;i<items.length;i++){pb.set(i/items.length*15,'📷 Загружаю фото '+(i+1)+'/'+items.length);imgs.push(await loadImg(items[i].data))}const url=await buildWebM(imgs,pb);pb.done('Видео готово');addMessage('ai','Видео из твоих фотографий готово.','<video controls playsinline src="'+url+'"></video><div class="small">Файл WebM · плавный зум, панорама и переходы</div>',false)}catch(e){pb.done('Ошибка');addMessage('ai','Не удалось собрать видео: '+e.message,null,false)}}
+async function send(){const text=input.value.trim(),files=attachments.slice();if(!text&&!files.length)return;input.value='';attachments=[];renderChips();const command=text.match(/^\/(img|image|фото|clip|video|видео|vid)\s*(.*)$/i);if(mode==='img'||command&&/^(img|image|фото)$/i.test(command[1]))return generateImage(command?command[2]:text);if(mode==='clip'||command&&/^(clip|video|видео)$/i.test(command[1]))return generateClip(command?command[2]:text);if(command&&command[1].toLowerCase()==='vid'){const photos=files.filter(x=>x.type==='image');if(photos.length)return videoFromPhotos(photos);if(text.length>4)return generateClip(text.slice(4));addMessage('ai','Прикрепи фото и отправь /vid.',null,false);return}
+const imgs=files.filter(x=>x.type==='image').map(x=>x.data);const vids=files.filter(x=>x.type==='video');let prompt=text||'Проанализируй вложения и опиши их';files.filter(x=>x.type==='text').forEach(x=>prompt+='\n\nФайл '+x.name+':\n'+x.content);vids.forEach(v=>prompt+='\nВидео '+v.name+': проанализируй ключевые кадры по порядку.');if(vids.length)imgs.push(...vids.flatMap(v=>v.frames));addMessage('user',text||'📎 Вложения',esc(text||'Вложения: '+files.map(x=>x.name).join(', '))+(imgs.length?'<div class="small">Изображений/кадров: '+imgs.length+'</div>':''));const pb=progress('Отправляю запрос');const stop=timerProgress(pb);try{const ans=await ask(prompt,imgs);stop();pb.done('Ответ получен');addMessage('ai',ans)}catch(e){stop();pb.done('Ошибка');addMessage('ai','❌ '+e.message,null,false)}}
+$('send').onclick=send;input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();send()}});
+$('mic').onclick=()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){alert('Голосовой ввод не поддерживается');return}const r=new SR();r.lang='ru-RU';r.interimResults=false;r.onresult=e=>{input.value=e.results[0][0].transcript;input.focus()};r.onerror=()=>alert('Не удалось распознать речь');r.start()};
+$('clear').onclick=()=>{if(confirm('Очистить историю чата?')){history=[];save();chat.innerHTML='<div class="hint">🕸️ История очищена. Чем займёмся?</div>'}};
+if(history.length){chat.innerHTML='';history.forEach(m=>addMessage(m.r,m.t,null,false))}
+loadModels();
+</script>
+</body>
+</html>
