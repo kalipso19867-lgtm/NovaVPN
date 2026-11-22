@@ -1,0 +1,9 @@
+{
+  "name": "Spider AI",
+  "short_name": "Spider AI",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#071327",
+  "theme_color": "#b5121b",
+  "description": "Spider AI assistant"
+}
