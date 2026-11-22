@@ -16,7 +16,45 @@ header{height:68px;flex:none;display:flex;align-items:center;gap:10px;padding:0 
 .tools{flex:none;display:flex;gap:8px;overflow-x:auto;padding:10px 13px 6px;scrollbar-width:none;background:#ffffffb8;border-top:1px solid var(--line)}.tools::-webkit-scrollbar{display:none}.tool-btn{white-space:nowrap;display:flex;align-items:center;gap:7px;padding:9px 13px;min-height:40px;border:1px solid var(--line);border-radius:14px;background:#fff;color:#65718a;font-size:12px}.tool-btn.active{background:#eeeaff;border-color:#d9d1ff;color:#6558e8;font-weight:700}.tool-btn .tool-icon{font-size:15px}
 .learn-panel{position:fixed;inset:0;z-index:20;background:#1d294766;display:none;align-items:flex-end;justify-content:center}.learn-panel.open{display:flex}.learn-card{width:min(100%,760px);max-height:88dvh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:24px 24px 0 0;padding:20px 16px calc(20px + var(--safe));box-shadow:0 -12px 45px #1c2b4b22}.learn-card h2{margin:0 0 6px;font-size:21px}.learn-card p{color:var(--muted);font-size:12px}.learn-card textarea,.learn-card input{width:100%;background:#f7f8fc;border:1px solid var(--line);border-radius:12px;padding:11px;margin:5px 0 10px;color:var(--text)}.learn-card textarea{min-height:92px;resize:vertical}.learn-actions{display:flex;gap:8px;flex-wrap:wrap}.learn-actions button{padding:10px 13px;border-radius:12px;background:#6558e8;color:white}.learn-actions .secondary{background:#f1f2f8;color:#56627a;border:1px solid var(--line)}.learn-stats{font-size:12px;color:#6558e8;margin:8px 0}.learn-note{padding:10px;border-radius:12px;background:#f5f6fb;font-size:11px;color:#738097}
 .composer-wrap{flex:none;padding:8px 12px calc(12px + var(--safe));background:linear-gradient(180deg,#f6f8fc00,#f6f8fc 18%)}.composer{width:min(100%,820px);margin:0 auto;display:flex;align-items:flex-end;gap:8px;padding:8px 9px 8px 11px;border-radius:25px;background:#fff;border:1px solid #e0e5ef;box-shadow:0 8px 28px #283b650e}.composer:focus-within{border-color:#b5aaff;box-shadow:0 0 0 3px #6558e812}#prompt{flex:1;min-width:0;max-height:150px;min-height:42px;resize:none;border:0;outline:0;background:transparent;color:var(--text);padding:10px 5px;font:15px/1.45 inherit}#prompt::placeholder{color:#a0a9b9}.send-btn{width:43px;height:43px;flex:none;border-radius:16px;background:linear-gradient(145deg,#8d80f7,#6558e8);color:white;font-size:20px;display:grid;place-items:center}.composer-hint{text-align:center;color:#9aa4b5;font-size:10px;padding-top:7px}.progress{margin-top:4px;min-width:min(260px,70vw)}.progress-label{display:flex;justify-content:space-between;gap:12px;font-size:12px;margin-bottom:5px}.track{height:7px;border-radius:8px;background:#e9eaf2;overflow:hidden}.fill{height:100%;width:0;background:linear-gradient(90deg,#6558e8,#a99cff);transition:width .2s}#fileInput{position:fixed;left:-10000px;width:1px;height:1px;opacity:0}a{color:#6558e8}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #8d80f7;outline-offset:2px}
-@media(max-width:420px){header{padding:0 9px;gap:5px}#modelSel{max-width:105px;font-size:10px}.icon-btn{width:36px}.suggestions{gap:8px}.suggestion{padding:11px;min-height:75px}.tool-btn{padding:8px 11px}.composer-wrap{padding-left:8px;padding-right:8px}}@media(min-width:700px){#chat{padding:28px 24px}.composer-wrap{padding-left:24px;padding-right:24px}.welcome{padding:35px 10px}}</style>
+@media(max-width:420px){header{padding:0 9px;gap:5px}#modelSel{max-width:105px;font-size:10px}.icon-btn{width:36px}.suggestions{gap:8px}.suggestion{padding:11px;min-height:75px}.tool-btn{padding:8px 11px}.composer-wrap{padding-left:8px;padding-right:8px}}@media(min-width:700px){#chat{padding:28px 24px}.composer-wrap{padding-left:24px;padding-right:24px}.welcome{padding:35px 10px}}/* CYBER TECH visual system — option 2 */
+:root{color-scheme:dark;--bg:#07111f;--surface:#0c1b2d;--surface2:#10243a;--line:#1c3a56;--text:#e6f4ff;--muted:#8aa8bf;--accent:#00c8ff;--accent2:#347dff;--safe:env(safe-area-inset-bottom,0px)}
+body{background:radial-gradient(ellipse at 50% -20%,#123b62 0%,#07111f 58%);color:var(--text)}
+header{background:#081728f2;border-bottom:1px solid #1a4566;box-shadow:0 4px 24px #00aaff0b}
+.logo,.welcome-logo{background:linear-gradient(145deg,#00d5ff,#1767e8);box-shadow:0 0 26px #00bfff38;color:#001323}
+.logo{border:1px solid #65e5ff66}
+header h1{letter-spacing:.7px;text-shadow:0 0 14px #00bfff40}
+.icon-btn{color:#9bc9e6}.icon-btn:active,.tool-btn:active,.send-btn:active{background:#00c8ff20}
+#modelSel{background:#0b1c30;border-color:#245273;color:#bfeaff}
+#chat{background-image:linear-gradient(#12314a12 1px,transparent 1px),linear-gradient(90deg,#12314a12 1px,transparent 1px);background-size:28px 28px}
+.welcome-logo{border:1px solid #65e5ff70;box-shadow:0 0 0 8px #00bfff0b,0 0 42px #00bfff3b}
+.welcome h2{color:#eaf8ff;text-shadow:0 0 22px #00aaff25;letter-spacing:-.5px}
+.welcome p{color:#8eacc4}
+.suggestion{background:linear-gradient(145deg,#102941,#0a1b2d);border-color:#204966;color:#e4f6ff;box-shadow:inset 0 1px #ffffff08,0 7px 22px #0003}
+.suggestion b{color:#e5f7ff}.suggestion span{color:#86a9c2}.suggestion:active{border-color:#00c8ff}
+.msg{background:#0d2237;border-color:#1b4564;color:#d9efff;box-shadow:0 5px 18px #0003}
+.user{background:linear-gradient(135deg,#075c85,#123d80);border-color:#168fc0;color:#fff}
+.ai{background:transparent;border-color:transparent;box-shadow:none}
+.msg pre{background:#061321;color:#b9e8ff}
+.actions button{background:#0b2033;color:#9bc9e6;border-color:#204966}
+#modelStatus{color:#7da9c6}
+.chip{background:#0c2034;border-color:#204966;color:#b8dff5}.chip button{color:#86abc3}
+.tools{background:#081728f2;border-top:1px solid #1a4566}
+.tool-btn{background:#0b1d30;border-color:#1c405c;color:#9bbbd1}
+.tool-btn.active{background:#063b59;border-color:#00bfff;color:#69e4ff;box-shadow:inset 0 0 18px #00aaff18}
+.learn-panel{background:#020914c9}.learn-card{background:#0b1b2d;border-color:#1c4564;box-shadow:0 -12px 45px #0009}
+.learn-card p{color:#91afc6}.learn-card textarea,.learn-card input{background:#071525;border-color:#23445e;color:#e3f5ff}
+.learn-actions button{background:linear-gradient(135deg,#00bfe8,#2469e8);color:#001523;font-weight:700}
+.learn-actions .secondary{background:#10273d;color:#b6d8ed;border-color:#244963}
+.learn-stats{color:#55ddff}.learn-note{background:#10243a;color:#8eafc7}
+.composer-wrap{background:linear-gradient(180deg,#07111f00,#07111f 18%)}
+.composer{background:#0b1d30;border-color:#24506e;box-shadow:0 8px 30px #0005}
+.composer:focus-within{border-color:#00bfff;box-shadow:0 0 0 3px #00bfff18}
+#prompt{color:#e6f5ff}#prompt::placeholder{color:#7396b0}
+.send-btn{background:linear-gradient(145deg,#00d5ff,#1767e8);color:#001323;box-shadow:0 5px 18px #00bfff38}
+.composer-hint{color:#6689a4}.track{background:#16334b}.fill{background:linear-gradient(90deg,#00c8ff,#347dff)}
+a{color:#55dcff}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #00c8ff}
+</style>
 </head>
 <body><header><div class="brand"><div class="logo">🕷</div><h1>Spider AI</h1></div><select id="modelSel" aria-label="Локальная модель"><option>Qwen2.5 0.5B · локально</option></select><div class="header-actions"><button class="icon-btn" id="settings" title="Настройки">⚙</button><button class="icon-btn" id="clear" title="Новый чат">＋</button></div></header>
 <main id="chat"><section class="welcome" id="welcome"><div class="welcome-logo">🕷</div><h2>Ваши идеи. Один интеллект.</h2><p>Spider AI — помощник для вопросов, проектов и творчества</p><div class="suggestions"><button class="suggestion" data-prompt="Объясни сложную тему простыми словами"><b>📚 Объяснить тему</b><span>Понятно и по шагам</span></button><button class="suggestion" data-prompt="Помоги написать и проверить код"><b>💻 Разработка</b><span>Код, идеи и отладка</span></button><button class="suggestion" data-prompt="Составь подробный план решения моей задачи"><b>🧭 План действий</b><span>От идеи до результата</span></button><button class="suggestion" data-prompt="Придумай несколько необычных идей проекта"><b>✨ Новые идеи</b><span>Найти нестандартный подход</span></button></div></section></main><div id="modelStatus">Подключаю локальный интеллект…</div><div id="chiprow"></div>
