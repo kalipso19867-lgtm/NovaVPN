@@ -24,6 +24,18 @@ jobs:
         run: |
           mkdir -p spiderai-android/app/src/main/assets/www
           cp -R spiderai/. spiderai-android/app/src/main/assets/www/
+      - name: Check embedded JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          html = Path('spiderai/index.html').read_text()
+          scripts = re.findall(r'<script>([\\s\\S]*?)</script>', html)
+          if not scripts:
+              raise SystemExit('No inline JavaScript found')
+          Path('/tmp/spiderai-check.js').write_text('\\n'.join(scripts))
+          PY
+          node --check /tmp/spiderai-check.js
       - name: Build debug APK
         working-directory: spiderai-android
         run: gradle --no-daemon assembleDebug
