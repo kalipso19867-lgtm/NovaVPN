@@ -102,6 +102,7 @@ const $=id=>document.getElementById(id), chat=$('chat'), input=$('prompt'), file
 const SYSTEM='Ты — Spider AI, универсальный ИИ-помощник. Отвечай на русском, понятно, структурированно и по делу.';
 const FALLBACK_MODELS=['openai/gpt-oss-20b','mistralai/mistral-small-3.2','qwen/qwen3-coder-30b-a3b-instruct','meta/llama-3.3-70b-instruct'];
 let mode='chat', attachments=[], history=[], modelList=FALLBACK_MODELS.slice(), imageModels=[], videoModels=[], pollenKey='';
+try{pollenKey=localStorage.getItem('sp_pollinations_key')||''}catch(e){}
 try{history=JSON.parse(localStorage.getItem('sp_h')||'[]')}catch(e){}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function save(){try{localStorage.setItem('sp_h',JSON.stringify(history.slice(-80)))}catch(e){}}
@@ -160,7 +161,9 @@ async function connectPollinations(){
   throw Error('Код авторизации истёк. Нажми ⚙ и попробуй снова.');
  }catch(e){alert('Не удалось подключить Pollinations: '+e.message)}
 }
-$('settings').onclick=()=>{const action=confirm('Spider AI объединяет локальный чат и онлайн-инструменты фото/видео.\n\nЛокальный чат: '+(window.SpiderLocal?window.SpiderLocal.status():'недоступен')+'\nPollinations: '+(pollenKey?'подключён':'не подключён')+'\n\nНажми OK, чтобы подключить бесплатный аккаунт Pollinations для генерации/правки медиа.');if(action)connectPollinations()};
+function configurePollinationsKey(){const entered=prompt('Вставь свой Pollinations API key (sk_…). Он сохранится только в локальном хранилище этого приложения на телефоне. Не отправляй его в чат и не публикуй в GitHub.',pollenKey||'');if(entered===null)return;if(!entered.trim()){pollenKey='';try{localStorage.removeItem('sp_pollinations_key')}catch(e){}alert('Ключ удалён с этого устройства.');return}const key=entered.trim();if(!/^sk_[A-Za-z0-9_-]{12,}$/.test(key)){alert('Формат ключа не похож на Pollinations sk_-ключ.');return}pollenKey=key;try{localStorage.setItem('sp_pollinations_key',key);alert('Ключ сохранён только на этом устройстве. Теперь попробуй создать фото или видео.')}catch(e){alert('Не удалось сохранить ключ: '+e.message)}}
+$('settings').onclick=()=>{const action=confirm('Spider AI · Настройки\n\nЛокальный чат: '+(window.SpiderLocal?window.SpiderLocal.status():'недоступен')+'\nPollinations: '+(pollenKey?'ключ сохранён на устройстве':'ключ не добавлен')+'\n\nOK — добавить/заменить ключ. Отмена — удалить сохранённый ключ.');if(action)configurePollinationsKey();else if(pollenKey&&confirm('Удалить сохранённый Pollinations ключ с этого устройства?'))configurePollinationsKeyClear()};
+function configurePollinationsKeyClear(){pollenKey='';try{localStorage.removeItem('sp_pollinations_key')}catch(e){}alert('Ключ удалён с этого устройства.')}
 function authHeaders(json=false){const h={};if(json)h['Content-Type']='application/json';if(pollenKey)h.Authorization='Bearer '+pollenKey;return h}
 async function ask(text,images=[]){
  if(!window.SpiderLocal)throw Error('Локальный движок недоступен. Установи Android APK, а не открывай веб-версию.');
